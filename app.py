@@ -163,12 +163,14 @@ def logout():
 @x.no_cache
 def signup():
     try:
+               # Validate input fields
         user_name = x.validate_user_name()
         user_last_name = x.validate_user_last_name()
         user_email = x.validate_user_email()
         user_password = x.validate_user_password()
         hashed_password = generate_password_hash(user_password)
         
+        # Generate user details
         user_pk = str(uuid.uuid4())
         user_avatar = ""
         user_created_at = int(time.time())
@@ -178,16 +180,27 @@ def signup():
         user_verified_at = 0
         user_verification_key = str(uuid.uuid4())
 
+        # Database connection
         db, cursor = x.db()
-        q = 'INSERT INTO users VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-        cursor.execute(q, (user_pk, user_name, user_last_name, user_email, 
-                        hashed_password, user_avatar, user_created_at, user_deleted_at, user_blocked_at, 
-                        user_updated_at, user_verified_at, user_verification_key))
         
-        # x.send_verify_email(user_email, user_verification_key)
+        # Insert user into the `users` table
+        q1 = 'INSERT INTO users VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        cursor.execute(q1, (user_pk, user_name, user_last_name, user_email, 
+                            hashed_password, user_avatar, user_created_at, 
+                            user_deleted_at, user_blocked_at, user_updated_at, 
+                            user_verified_at, user_verification_key))
+
+        # Assign default role to the user -- TODO: Change this so its whatever user chooses
+        default_role_pk = "c56a4180-65aa-42ec-a945-5fd21dec0538"  
+        q2 = 'INSERT INTO users_roles (user_role_user_fk, user_role_role_fk) VALUES (%s, %s)'
+        cursor.execute(q2, (user_pk, default_role_pk))
+
+        # Commit changes
         db.commit()
-    
-        return """<template mix-redirect="/login"></template>""", 201
+
+        x.send_verify_email(user_email, user_verification_key)
+        return "<template mix-target='main'>Please check your email to verify your account.</template>", 200
+
     
     except Exception as ex:
         ic(ex)
@@ -211,7 +224,6 @@ def signup():
 @app.post("/login")
 def login():
     try:
-
         user_email = x.validate_user_email()
         user_password = x.validate_user_password()
 
@@ -221,9 +233,14 @@ def login():
                 ON user_pk = user_role_user_fk 
                 JOIN roles
                 ON role_pk = user_role_role_fk
-                WHERE user_email = %s"""
+                WHERE LOWER(user_email) = %s """
+        ic(user_email)  # Debug email
+        ic(q)  # Debug query
+
+
         cursor.execute(q, (user_email,))
         rows = cursor.fetchall()
+        ic(rows)  # Debug query results
         if not rows:
             toast = render_template("___toast.html", message="user not registered")
             return f"""<template mix-target="#toast">{toast}</template>""", 400     
@@ -268,6 +285,8 @@ def create_item():
         file, item_image_name = x.validate_item_image()
 
         # Save the image
+        # db, cursor = x.db() -- add somewhere
+
         file.save(os.path.join(x.UPLOAD_ITEM_FOLDER, item_image_name))
         # TODO: if saving the image went wrong, then rollback by going to the exception
         # TODO: Success, commit

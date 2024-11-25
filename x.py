@@ -141,7 +141,7 @@ def validate_item_image():
 
 
 ##############################
-def send_verify_email(to_email, user_verification_key):
+def send_verify_email(user_email, user_verification_key):
     try:
         # Create a gmail fullflaskdemomail
         # Enable (turn on) 2 step verification/factor in the google account manager
@@ -149,11 +149,11 @@ def send_verify_email(to_email, user_verification_key):
 
 
         # Email and password of the sender's Gmail account
-        sender_email = "fullflaskdemomail@gmail.com"
-        password = "YOUR_KEY_HERE"  # If 2FA is on, use an App Password instead
+        sender_email = "deterhannahs@gmail.com"
+        password = "jenghzgwfcvrsuiz" # If 2FA is on, use an App Password instead
 
         # Receiver email address
-        receiver_email = "fullflaskdemomail@gmail.com"
+        receiver_email = user_email
         
         # Create the email message
         message = MIMEMultipart()
@@ -161,8 +161,18 @@ def send_verify_email(to_email, user_verification_key):
         message["To"] = receiver_email
         message["Subject"] = "Please verify your account"
 
+        # verification link
+        verification_link = f"http://127.0.0.1/verify/{user_verification_key}"  # Update to your actual domain in production
+
         # Body of the email
-        body = f"""To verify your account, please <a href="http://127.0.0.1/verify/{user_verification_key}">click here</a>"""
+        body = f"""
+        <html>
+            <body>
+                <p>Hi,</p>
+                <p>To verify your account, please <a href="{verification_link}">click here</a>.</p>
+            </body>
+        </html>
+        """
         message.attach(MIMEText(body, "html"))
 
         # Connect to Gmail's SMTP server and send the email
@@ -173,7 +183,7 @@ def send_verify_email(to_email, user_verification_key):
         print("Email sent successfully!")
 
         return "email sent"
-       
+    
     except Exception as ex:
         raise_custom_exception("cannot send email", 500)
     finally:
