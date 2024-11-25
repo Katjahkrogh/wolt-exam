@@ -181,8 +181,8 @@ def signup():
         db, cursor = x.db()
         q = 'INSERT INTO users VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
         cursor.execute(q, (user_pk, user_name, user_last_name, user_email, 
-                           hashed_password, user_avatar, user_created_at, user_deleted_at, user_blocked_at, 
-                           user_updated_at, user_verified_at, user_verification_key))
+                        hashed_password, user_avatar, user_created_at, user_deleted_at, user_blocked_at, 
+                        user_updated_at, user_verified_at, user_verification_key))
         
         # x.send_verify_email(user_email, user_verification_key)
         db.commit()
