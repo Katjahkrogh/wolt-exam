@@ -108,7 +108,7 @@ def view_partner():
     user = session.get("user")
     if len(user.get("roles", "")) > 1:
         return redirect(url_for("view_choose_role"))
-    return response
+    return make_response
 
 
 ##############################
