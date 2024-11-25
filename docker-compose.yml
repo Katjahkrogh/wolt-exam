@@ -29,6 +29,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
+    platform: linux/amd64
     container_name: fulldemo_phpmyadmin
     depends_on:
       - mysql
