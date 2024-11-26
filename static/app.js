@@ -5,5 +5,4 @@ function render_items(data){
         var marker = L.marker(e.coords).addTo(map)
         marker.bindPopup(e.popup)
     })
-
 }

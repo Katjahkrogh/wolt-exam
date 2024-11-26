@@ -99,7 +99,8 @@ def view_customer():
     print(user)
     if len(user.get("roles", "")) > 1:
         return redirect(url_for("view_choose_role"))
-    return render_template("view_customer.html", user=user)
+    active_tab = request.args.get('tab', 'restaurants')
+    return render_template("view_customer.html", user=user, active_tab=active_tab)
 
 
 ##############################
@@ -153,8 +154,9 @@ def view_admin():
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
 
-    # Passes down users to view admin page
-    return render_template("view_admin.html", users=users)
+    # Passes down users and default active tab to view admin page
+    active_tab = request.args.get('tab', 'users')
+    return render_template("view_admin.html", users=users, active_tab=active_tab)
 
 
 

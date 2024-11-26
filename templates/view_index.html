@@ -1,19 +1,9 @@
-{% if session['user'] %}
-    {% include "_top_logged.html" %}
-{% else %}
-    {% include "_top.html" %}
-{% endif %}
-<main class="w-full d-flex">
-    <div id="map" class="w-full h-100vh"></div>
-    
-    <div id="items" class="w-full h-100vh">
-        <button class="px-20 py-4 rounded-sm"
-            mix-get="/items/page/1"
-        >
-            More
-        </button>
-    
-    </div>
+{% include "_top.html" %}
+
+<main class="mx-0 -mt-10">
+    <section class="d-flex h-80vh px-8 j-content-start a-items-center bg-customer-hero" xl="px-16" >
+        <h1 class="text-c-black text-400 max-w-600px">Discover and get great food.</h1>
+    </section>
 </main>
 
 

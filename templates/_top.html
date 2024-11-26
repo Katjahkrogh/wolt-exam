@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='mixhtml.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://use.typekit.net/mlf2qlo.css">
     <script src="https://unpkg.com/mojocss"></script>
     <title>
         {{ title or "Company" }}
@@ -12,9 +13,9 @@
 </head>
 <body class="w-full h-100vh text-c-gray:-16">
 <header class="mb-10">   
-    <nav class="d-flex flex-row j-content-between a-items-center border-b-1 border-c-lightGrey px-8">
+    <nav class="d-flex flex-row j-content-between a-items-center border-b-1 border-c-lightGrey px-8 py-4 mb-6" xl="px-16">
         <a href="{{ url_for('view_index')}}">
-            <img src="{{ url_for('static', filename='img/wolt_logo.png') }}" alt="logo" class="w-20">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="w-16">
         </a>
         <section class="d-flex gap-2">
             <form method="GET" action="{{url_for('view_signup')}}">

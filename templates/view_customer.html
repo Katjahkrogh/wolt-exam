@@ -3,9 +3,14 @@
 {% else %}
         {% include "_top.html" %}
 {% endif %}
-<main class="mx-8">
-        {{ user }}
+<main>
+{% if active_tab == 'explore' %}
+        {% include "_explore.html" %}
+{% elif active_tab == 'restaurants' %}
+        {% include "_restaurants.html" %}
+{% endif %}
 </main>
+
 {% include "_bottom.html" %}
 </body>
 </html>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='mixhtml.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://use.typekit.net/mlf2qlo.css">
     <script src="https://unpkg.com/mojocss"></script>
     <title>
         {{ title or "Company" }}
@@ -13,23 +14,25 @@
 </head>
 <body class="h-100vh text-c-gray:-16">
 <header class="mb-10">   
-    <nav class="d-flex flex-row j-content-between a-items-center border-b-1 border-c-lightGrey px-8">
+    <nav class="d-flex flex-row j-content-between a-items-center border-b-1 border-c-lightGrey px-8 py-4 mb-6" xl="px-16">
         <a href="{{ url_for('view_index')}}">
-            <img src="{{ url_for('static', filename='img/wolt_logo.png') }}" alt="logo" class="w-20">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="w-16">
         </a>
         <section class="d-flex gap-2">
             <form method="GET" action="{{url_for('view_profile')}}">
                 <button class="profile-btn" hover="bg-c-grey3 cursor-pointer"> 
-                    <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-10 rounded-full" alt="Profile Picture">
+                    <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 rounded-full" alt="profile picture">
                     Profile
                 </button>
             </form>
             <form method="POST" action="">
                 <button class="rounded-full px-3 d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer"> 
-                    <img src="{{ url_for('static', filename='img/basket.svg') }}" alt="logo" class="w-6">
+                    <img src="{{ url_for('static', filename='img/basket.svg') }}" alt="basket" class="w-4">
                 </button>
             </form>
         </section>
     </nav>
+    {% include "__tabs.html" %}
 </header>
+
     <div id="toast" class="d-flex flex-col j-content-center p-fixed w-full top-4 z-10"></div>
