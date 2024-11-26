@@ -1,0 +1,14 @@
+{% include "_top_logged.html" %}
+<main class="mx-8">
+    PROFILE {{ user }}
+    <div>
+    <form method="POST" action="{{url_for('logout')}}">
+        <button>
+            Logout
+        </button>
+    </form>
+</div>
+</main>
+{% include "_bottom.html" %}
+</body>
+</html>
