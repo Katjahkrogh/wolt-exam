@@ -117,10 +117,29 @@ def view_partner():
 def view_admin():
     if not session.get("user", ""): 
         return redirect(url_for("view_login"))
+    
     user = session.get("user")
+    
     if not "admin" in user.get("roles", ""):
         return redirect(url_for("view_login"))
-    return render_template("view_admin.html")
+    
+    # Get all users from the database
+    try:
+        db, cursor = x.db()
+        q = "SELECT * FROM users"
+        cursor.execute(q)
+        users = cursor.fetchall()
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+    # Passes down users to view admin page
+    return render_template("view_admin.html", users=users)
 
 
 
@@ -134,7 +153,6 @@ def view_choose_role():
         return redirect(url_for("view_login"))
     user = session.get("user")
     return render_template("view_choose_role.html", user=user, title="Choose role")
-
 
 ##############################
 ##############################
@@ -163,7 +181,7 @@ def logout():
 @x.no_cache
 def signup():
     try:
-               # Validate input fields
+        # Validate input fields
         user_name = x.validate_user_name()
         user_last_name = x.validate_user_last_name()
         user_email = x.validate_user_email()
@@ -355,14 +373,27 @@ def user_update():
 def user_block(user_pk):
     try:        
         if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
-        user_pk = x.validate_uuid4(user_pk)
-        user_blocked_at = int(time.time())
+        user = {
+            "user_pk" : x.validate_uuid4(user_pk),
+            "user_blocked_at" : int(time.time())
+        }
         db, cursor = x.db()
         q = 'UPDATE users SET user_blocked_at = %s WHERE user_pk = %s'
-        cursor.execute(q, (user_blocked_at, user_pk))
+        cursor.execute(q, (user["user_blocked_at"], user["user_pk"]))
         if cursor.rowcount != 1: x.raise_custom_exception("cannot block user", 400)
         db.commit()
-        return """<template>user blocked</template>"""
+        btn_unblock = render_template("___btn_unblock_user.html", user=user)
+        toast = render_template("__toast.html", message="User blocked")
+        return f"""
+                <template 
+                mix-target='#block-{user_pk}' 
+                mix-replace>
+                    {btn_unblock}
+                </template>
+                <template mix-target="#toast" mix-bottom>
+                    {toast}
+                </template>
+                """
     
     except Exception as ex:
         ic(ex)
@@ -383,14 +414,28 @@ def user_block(user_pk):
 def user_unblock(user_pk):
     try:
         if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
-        user_pk = x.validate_uuid4(user_pk)
-        user_blocked_at = 0
+        user = {
+            "user_pk" : x.validate_uuid4(user_pk),
+            "user_blocked_at" : 0
+        }
+
         db, cursor = x.db()
         q = 'UPDATE users SET user_blocked_at = %s WHERE user_pk = %s'
-        cursor.execute(q, (user_blocked_at, user_pk))
+        cursor.execute(q, (user["user_blocked_at"], user["user_pk"]))
         if cursor.rowcount != 1: x.raise_custom_exception("cannot unblock user", 400)
         db.commit()
-        return """<template>user unblocked</template>"""
+        btn_block = render_template("___btn_block_user.html", user=user)
+        toast = render_template("__toast.html", message="User unblocked")
+        return f"""
+                <template 
+                mix-target='#block-{user_pk}'
+                mix-replace>
+                    {btn_block}
+                </template>
+                <template mix-target="#toast" mix-bottom>
+                    {toast}
+                </template>
+                """
     
     except Exception as ex:
 
