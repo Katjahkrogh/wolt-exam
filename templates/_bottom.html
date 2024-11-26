@@ -5,21 +5,45 @@
 
 <script>
     mojo({
-        patterns : {
-           "input": {
-               idle : "border border-1 border-c-gray:+25 px-2 rounded-4 h-12 outline-none"
-           },
-           "button": {
-                idle : "border-c-black px-4 rounded-sm h-12 outline-none"
-            }           
-         },
-       })
+        base: {
+            themes: {
+                default: {
+                    primary: "#009DE0",
+                    secondary: "#E9F7FD",
+                    grey1: "#F6F6F6",
+                    grey2: "#EDEEEE",
+                    grey3: "#E4E4E4",
+                    
+        }}},
+        patterns: {
+            "input": {
+                idle : "border border-1 border-c-gray:+25 px-2 rounded-4 h-12 outline-none"
+            },
+            "button": {
+                    idle : "px-4 rounded-sm h-12 outline-none bg-c-primary text-c-white",
+                    hover : "bg-c-#1FA9E4 cursor-pointer"
+                }           
+            },
+        utilities: [
+            {
+                name: "light-btn",
+                pattern: "bg-c-secondary text-c-primary"
+            },
+            {
+                name: "rounded-btn",
+                pattern: "rounded-full bg-c-secondary text-c-primary"
+            },
+            {
+                name: "profile-btn",
+                pattern: "bg-c-grey2 text-c-black rounded-full d-flex gap-2 j-content-center a-items-center pl-1"
+            },
+        ]
+        })
 </script>
 
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
- 
     // Initialize the map
     var map = L.map('map').setView([55.6845, 12.564148], 12);
 

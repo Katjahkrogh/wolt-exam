@@ -1,3 +1,4 @@
+import random
 from flask import Flask, session, render_template, redirect, url_for, make_response, request
 from flask_session import Session
 from werkzeug.security import generate_password_hash
@@ -95,9 +96,23 @@ def view_customer():
     if not session.get("user", ""): 
         return redirect(url_for("view_login"))
     user = session.get("user")
+    print(user)
     if len(user.get("roles", "")) > 1:
         return redirect(url_for("view_choose_role"))
     return render_template("view_customer.html", user=user)
+
+
+##############################
+@app.get("/profile")
+@x.no_cache
+def view_profile():
+    if not session.get("user", ""): 
+        return redirect(url_for("view_login"))
+    user = session.get("user")
+    print(user)
+    if len(user.get("roles", "")) > 1:
+        return redirect(url_for("view_choose_role"))
+    return render_template("view_profile.html", user=user)
 
 ##############################
 @app.get("/partner")
@@ -163,7 +178,7 @@ def logout():
 @x.no_cache
 def signup():
     try:
-               # Validate input fields
+        # Validate input fields
         user_name = x.validate_user_name()
         user_last_name = x.validate_user_last_name()
         user_email = x.validate_user_email()
@@ -172,7 +187,7 @@ def signup():
         
         # Generate user details
         user_pk = str(uuid.uuid4())
-        user_avatar = ""
+        user_avatar = "profile_" + str(random.randint(1, 100)) + ".jpg"
         user_created_at = int(time.time())
         user_deleted_at = 0
         user_blocked_at = 0
@@ -255,9 +270,11 @@ def login():
             "user_name": rows[0]["user_name"],
             "user_last_name": rows[0]["user_last_name"],
             "user_email": rows[0]["user_email"],
+            "user_avatar": rows[0].get("user_avatar"), 
             "roles": roles
         }
         ic(user)
+        print(user)
         session["user"] = user
         if len(roles) == 1:
             return f"""<template mix-redirect="/{roles[0]}"></template>"""
