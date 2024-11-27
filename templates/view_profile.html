@@ -34,11 +34,9 @@
             </div>
         {% elif active_tab == 'delete' %}
             <h2 class="mb-10">Delete your Wolt account</h2>
-            
-                <button mix-get="users/delete/{{user['user_pk']}}" class="bg-c-red:+2 " hover="bg-c-red:+8">
-                Delete account
-                </button>
-            </form>
+                <form id="deleteAccountForm" >
+                    <button mix-post="/users/{{ session['user']['user_pk'] }}"  mix-data="#deleteAccountForm" class="bg-c-red:+2" hover="bg-c-red:+8">Delete My Account</button>
+                </form>
         {% endif %}
     </section>
 </main>

@@ -424,6 +424,7 @@ def create_item():
         # db, cursor = x.db() -- add somewhere
 
         file.save(os.path.join(x.UPLOAD_ITEM_FOLDER, item_image_name))
+        db, cursor = x.db()
         # TODO: if saving the image went wrong, then rollback by going to the exception
         # TODO: Success, commit
         return item_image_name
@@ -440,6 +441,65 @@ def create_item():
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()    
+
+
+
+##############################
+@app.post("/users/<user_pk>")
+def user_soft_delete(user_pk):
+    try:
+        # Check if the user is logged in
+        user_session = session.get("user", None)
+        if not user_session:
+            return redirect(url_for("view_login"))
+
+        # Ensure the user can only delete their own profile
+        if user_pk != user_session.get("user_pk"):
+            return """<template mix-target='#toast'>You can only delete your own account</template>""", 403
+
+        # Validate UUID
+        user_pk = x.validate_uuid4(user_pk)
+        user_deleted_at = int(time.time())
+
+        # Database connection and update
+        db, cursor = x.db()
+        query = 'UPDATE users SET user_deleted_at = %s WHERE user_pk = %s'
+        cursor.execute(query, (user_deleted_at, user_pk))
+        if cursor.rowcount != 1:
+            x.raise_custom_exception("Cannot delete user", 400)
+
+        db.commit()
+
+        # Log the user out
+        session.clear()
+
+        # Redirect to the index page
+        return f"""<template mix-redirect="/"></template>"""
+
+    except Exception as ex:
+        ic(ex)
+
+        # Rollback in case of database error
+        if "db" in locals():
+            db.rollback()
+
+        # Handle custom exceptions
+        if isinstance(ex, x.CustomException):
+            return f"""<template mix-target="#toast">{ex.message}</template>""", ex.code
+
+        # Handle database errors
+        if isinstance(ex, x.mysql.connector.Error):
+            return "<template>Database error</template>", 500        
+
+        # Handle unexpected errors
+        return "<template>System under maintenance</template>", 500  
+
+    finally:
+        # Close database resources
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
 
 
 ##############################
@@ -498,36 +558,36 @@ def _________DELETE_________(): pass
 ##############################
 ##############################
 
-@app.delete("/users/<user_pk>")
-def user_delete(user_pk):
-    try:
-        # Check if user is logged
-        if not session.get("user", ""): return redirect(url_for("view_login"))
-        # Check if it is an admin
-        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
-        user_pk = x.validate_uuid4(user_pk)
-        user_deleted_at = int(time.time())
-        db, cursor = x.db()
-        q = 'UPDATE users SET user_deleted_at = %s WHERE user_pk = %s'
-        cursor.execute(q, (user_deleted_at, user_pk))
-        if cursor.rowcount != 1: x.raise_custom_exception("cannot delete user", 400)
-        db.commit()
-        return """<template>user deleted</template>"""
+# @app.delete("/users/<user_pk>")
+# def user_delete(user_pk):
+#     try:
+#         # Check if user is logged
+#         if not session.get("user", ""): return redirect(url_for("view_login"))
+#         # Check if it is an admin
+#         if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
+#         user_pk = x.validate_uuid4(user_pk)
+#         user_deleted_at = int(time.time())
+#         db, cursor = x.db()
+#         q = 'UPDATE users SET user_deleted_at = %s WHERE user_pk = %s'
+#         cursor.execute(q, (user_deleted_at, user_pk))
+#         if cursor.rowcount != 1: x.raise_custom_exception("cannot delete user", 400)
+#         db.commit()
+#         return """<template>user deleted</template>"""
     
-    except Exception as ex:
+#     except Exception as ex:
 
-        ic(ex)
-        if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
-        if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>Database error</template>", 500        
-        return "<template>System under maintenance</template>", 500  
+#         ic(ex)
+#         if "db" in locals(): db.rollback()
+#         if isinstance(ex, x.CustomException): 
+#             return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+#         if isinstance(ex, x.mysql.connector.Error):
+#             ic(ex)
+#             return "<template>Database error</template>", 500        
+#         return "<template>System under maintenance</template>", 500  
     
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
+#     finally:
+#         if "cursor" in locals(): cursor.close()
+#         if "db" in locals(): db.close()
 
 
 
