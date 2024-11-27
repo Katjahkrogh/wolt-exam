@@ -15,7 +15,17 @@
 <body class="h-100vh text-c-gray:-16">
 <header class="mb-10">   
     <nav class="d-flex flex-row j-content-between a-items-center border-b-1 border-c-lightGrey px-8 py-4 mb-6" xl="px-16">
-        <a href="{{ url_for('view_index')}}">
+        <a href="{% if session.get('user') and 'admin' in session['user'].get('roles', []) %}
+                {{ url_for('view_admin') }}
+            {% elif session.get('user') and 'customer' in session['user'].get('roles', []) %}
+                {{ url_for('view_customer') }}
+            {% elif session.get('user') and 'partner' in session['user'].get('roles', []) %}
+                {{ url_for('view_partner') }}
+            {% elif session.get('user') and 'restaurant' in session['user'].get('roles', []) %}
+                {{ url_for('view_restaurant') }}
+            {% else %}
+                {{ url_for('view_index') }}
+            {% endif %}">
             <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="w-16">
         </a>
         <section class="d-flex gap-2">

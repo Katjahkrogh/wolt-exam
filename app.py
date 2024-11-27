@@ -113,7 +113,8 @@ def view_profile():
     print(user)
     if len(user.get("roles", "")) > 1:
         return redirect(url_for("view_choose_role"))
-    return render_template("view_profile.html", user=user)
+    active_tab = request.args.get('tab', 'profile')
+    return render_template("view_profile.html", user=user, active_tab=active_tab)
 
 ##############################
 @app.get("/partner")
@@ -496,7 +497,6 @@ def _________DELETE_________(): pass
 ##############################
 ##############################
 ##############################
-
 
 @app.delete("/users/<user_pk>")
 def user_delete(user_pk):
