@@ -131,18 +131,18 @@ def view_partner():
 ##############################
 @app.get("/admin")
 @x.no_cache
-def view_admin(): 
+def view_admin():
     try:
-        if not session.get("user", ""): 
-            return redirect(url_for("view_login"))
-    
         user = session.get("user")
-    
-        if not "admin" in user.get("roles", ""):
+        if not user:
             return redirect(url_for("view_login"))
-        
-        # Get all users from the database
+
+        if "admin" not in user.get("roles", []):
+            return redirect(url_for("view_login"))
+
         db, cursor = x.db()
+
+        # Hent brugere
         q = """ SELECT 
                 users.user_pk,
                 users.user_name,
@@ -150,24 +150,42 @@ def view_admin():
                 users.user_email,
                 users.user_blocked_at,
                 roles.role_name
-            FROM users
-            LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
-            LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+                FROM users
+                LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+                LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
             """
         cursor.execute(q)
         users = cursor.fetchall()
 
-        # Passes down users and default active tab to view admin page
+        # Hent items
+        q = """
+        SELECT 
+            items.item_pk,
+            items.item_title,
+            items.item_price,
+            items.item_image,
+            users.user_name
+        FROM items
+        LEFT JOIN users ON items.item_user_fk = users.user_pk
+        """
+        cursor.execute(q)
+        items = cursor.fetchall()
+
         active_tab = request.args.get('tab', 'users')
-        return render_template("view_admin.html", users=users, active_tab=active_tab)
+
+        return render_template("view_admin.html", users=users, active_tab=active_tab, items=items, user=user)
 
     except Exception as ex:
         ic(ex)
-        if "db" in locals(): db.rollback()
+        if "db" in locals():
+            db.rollback()
+        return "An error occurred", 500
 
     finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
 
 
 ##############################

@@ -4,9 +4,9 @@
         <div class="d-flex flex-col">
             <div
                 class="d-flex py-4 a-content-center p-content-center bg-c-charocoal:+3 text-c-body border-b-1 border-c-charocoal:+5">
-                <div class="px-6 flex-1 text-w-medium">First Name</div>
-                <div class="px-6 flex-1 text-w-medium">Last Name</div>
+                <div class="px-6 flex-1 text-w-medium">Name</div>
                 <div class="px-6 flex-1 text-w-medium">Email</div>
+                <div class="px-6 flex-1 text-w-medium">Role</div>
                 <div class="px-6 flex-1 text-w-medium"></div>
             </div>
             <div id="users">
@@ -17,10 +17,10 @@
                         {{ user["user_name"] }}
                     </div>
                     <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
-                        {{ user["user_last_name"] }}
+                        {{ user["user_email"] }}
                     </div>
                     <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
-                        {{ user["user_email"] }}
+                        {{ user["role_name"] }}
                     </div>
                     <div class="py-1 pl-6 flex-1 d-flex p-content-end">
                         {% if user["user_blocked_at"] == 0 %}
