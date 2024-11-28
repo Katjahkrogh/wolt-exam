@@ -13,11 +13,6 @@
         </a>
     {% elif 'admin' in session['user'].get('roles', []) %}
         <!-- Tabs for Admin -->
-        <a href="{{ url_for('view_admin', tab='restaurants') }}" class="tab-btn {% if active_tab == 'restaurants' %}active{% endif %}"
-            data-tab="restaurants" hover="{{ 'bg-c-grey2 rounded-full' if active_tab != 'restaurants' else '' }}"> 
-            <img src="{{ url_for('static', filename='img/fork_knife.svg') }}" alt="" class="h-5">
-            <p>Restaurants</p>
-        </a>
         <a href="{{ url_for('view_admin', tab='items') }}" class="tab-btn {% if active_tab == 'items' %}active{% endif %}"
             data-tab="items" hover="{{ 'bg-c-grey2 rounded-full' if active_tab != 'items' else '' }}">
             <img src="{{ url_for('static', filename='img/items.svg') }}" alt="" class="h-5">
