@@ -558,38 +558,6 @@ def _________DELETE_________(): pass
 ##############################
 ##############################
 
-# @app.delete("/users/<user_pk>")
-# def user_delete(user_pk):
-#     try:
-#         # Check if user is logged
-#         if not session.get("user", ""): return redirect(url_for("view_login"))
-#         # Check if it is an admin
-#         if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
-#         user_pk = x.validate_uuid4(user_pk)
-#         user_deleted_at = int(time.time())
-#         db, cursor = x.db()
-#         q = 'UPDATE users SET user_deleted_at = %s WHERE user_pk = %s'
-#         cursor.execute(q, (user_deleted_at, user_pk))
-#         if cursor.rowcount != 1: x.raise_custom_exception("cannot delete user", 400)
-#         db.commit()
-#         return """<template>user deleted</template>"""
-    
-#     except Exception as ex:
-
-#         ic(ex)
-#         if "db" in locals(): db.rollback()
-#         if isinstance(ex, x.CustomException): 
-#             return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
-#         if isinstance(ex, x.mysql.connector.Error):
-#             ic(ex)
-#             return "<template>Database error</template>", 500        
-#         return "<template>System under maintenance</template>", 500  
-    
-#     finally:
-#         if "cursor" in locals(): cursor.close()
-#         if "db" in locals(): db.close()
-
-
 
 
 ##############################
