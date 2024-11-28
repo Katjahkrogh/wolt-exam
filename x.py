@@ -149,7 +149,7 @@ def send_email(user_email, subject, body):
 
         # Create the email message
         message = MIMEMultipart()
-        message["From"] = "WOLT"
+        message["From"] = "My Company Name"
         message["To"] = user_email
         message["Subject"] = subject
 
@@ -168,4 +168,6 @@ def send_email(user_email, subject, body):
         raise_custom_exception("cannot send email", 500)
     finally:
         pass
+
+
 
