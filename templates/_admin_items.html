@@ -23,11 +23,11 @@
                         {{ item["item_price"] }}
                     </div>
                     <div class="py-1 pl-6 flex-1 d-flex p-content-end">
-                        <!-- {% if user["user_blocked_at"] == 0 %}
-                            {% include "___btn_block_user.html" %}
+                        {% if item["item_blocked_at"] == 0 %}
+                            {% include "___btn_block_item.html" %}
                         {% else %}
-                            {% include "___btn_unblock_user.html" %}
-                        {% endif %} -->
+                            {% include "___btn_unblock_item.html" %}
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
