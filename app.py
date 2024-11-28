@@ -143,7 +143,17 @@ def view_admin():
         
         # Get all users from the database
         db, cursor = x.db()
-        q = "SELECT * FROM users"
+        q = """ SELECT 
+                users.user_pk,
+                users.user_name,
+                users.user_last_name,
+                users.user_email,
+                users.user_blocked_at,
+                roles.role_name
+            FROM users
+            LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+            LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+            """
         cursor.execute(q)
         users = cursor.fetchall()
 
@@ -171,90 +181,6 @@ def view_choose_role():
     user = session.get("user")
     return render_template("view_choose_role.html", user=user, title="Choose role")
 
-##############################
-@app.get("/users/block/<user_pk>")
-def user_block(user_pk):
-    try:        
-        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
-        user = {
-            "user_pk" : x.validate_uuid4(user_pk),
-            "user_blocked_at" : int(time.time())
-        }
-        db, cursor = x.db()
-        q = 'UPDATE users SET user_blocked_at = %s WHERE user_pk = %s'
-        cursor.execute(q, (user["user_blocked_at"], user["user_pk"]))
-        if cursor.rowcount != 1: x.raise_custom_exception("cannot block user", 400)
-        db.commit()
-        btn_unblock = render_template("___btn_unblock_user.html", user=user)
-        toast = render_template("___toast.html", message="User blocked")
-        return f"""
-                <template 
-                mix-target='#block-{user_pk}' 
-                mix-replace>
-                    {btn_unblock}
-                </template>
-                <template mix-target="#toast" mix-bottom>
-                    {toast}
-                </template>
-                """
-    
-    except Exception as ex:
-        ic(ex)
-        if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
-        if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>Database error</template>", 500        
-        return "<template>System under maintenance</template>", 500  
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-
-##############################
-@app.get("/users/unblock/<user_pk>")
-def user_unblock(user_pk):
-    try:
-        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
-        user = {
-            "user_pk" : x.validate_uuid4(user_pk),
-            "user_blocked_at" : 0
-        }
-
-        db, cursor = x.db()
-        q = 'UPDATE users SET user_blocked_at = %s WHERE user_pk = %s'
-        cursor.execute(q, (user["user_blocked_at"], user["user_pk"]))
-        if cursor.rowcount != 1: x.raise_custom_exception("cannot unblock user", 400)
-        db.commit()
-
-        btn_block = render_template("___btn_block_user.html", user=user)
-        toast = render_template("___toast.html", message="User unblocked")
-        return f"""
-                <template 
-                mix-target='#unblock-{user_pk}'
-                mix-replace>
-                    {btn_block}
-                </template>
-                <template mix-target="#toast" mix-bottom>
-                    {toast}
-                </template>
-                """
-        
-    except Exception as ex:
-
-        ic(ex)
-        if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
-        if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>Database error</template>", 500        
-        return "<template>System under maintenance</template>", 500  
-    
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
 
 ##############################
 ##############################
@@ -600,3 +526,124 @@ def verify_user(verification_key):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()    
+
+    
+##############################
+@app.get("/users/block/<user_pk>")
+def block_user(user_pk):
+    try:        
+        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
+    
+        user_pk = x.validate_uuid4(user_pk)
+        user_blocked_at = int(time.time())
+        user_updated_at = int(time.time())
+
+        db, cursor = x.db()
+        q = 'UPDATE users SET user_blocked_at = %s, user_updated_at = %s WHERE user_pk = %s'
+        cursor.execute(q, (user_blocked_at, user_updated_at, user_pk))
+        if cursor.rowcount != 1: x.raise_custom_exception("cannot block user", 400)
+
+        # Prepare the block email content
+        q = 'SELECT user_name, user_email FROM `users` WHERE user_pk = %s'
+        cursor.execute(q, (user_pk,))
+        user = cursor.fetchone()
+        subject = "Your Account Has Been Blocked"
+        body = f"""
+        <html>
+            <body>
+                <p>Hi {user['user_name']},</p>
+                <p>Your account has been blocked. If you believe this is an error, please contact support.</p>
+            </body>
+        </html>
+        """
+        # Send the email
+        x.send_email(user["user_email"], subject, body)
+
+        db.commit()
+
+        btn_unblock = render_template("___btn_unblock_user.html", user={"user_pk": user_pk})
+        toast = render_template("___toast.html", message="User blocked")
+        return f"""
+                <template 
+                mix-target='#block-{user_pk}' 
+                mix-replace>
+                    {btn_unblock}
+                </template>
+                <template mix-target="#toast" mix-bottom>
+                    {toast}
+                </template>
+                """
+    
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>Database error</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+##############################
+@app.get("/users/unblock/<user_pk>")
+def unblock_user(user_pk):
+    try:
+        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
+
+        user_pk = x.validate_uuid4(user_pk)
+        user_blocked_at = int(time.time())
+        user_updated_at = int(time.time())
+
+        db, cursor = x.db()
+        q = 'UPDATE users SET user_blocked_at = %s, user_updated_at = %s WHERE user_pk = %s'
+        cursor.execute(q, (user_blocked_at, user_updated_at, user_pk))
+        if cursor.rowcount != 1: x.raise_custom_exception("cannot unblock user", 400)
+
+        # Prepare the block email content
+        q = 'SELECT user_name, user_email FROM `users` WHERE user_pk = %s'
+        cursor.execute(q, (user_pk,))
+        user = cursor.fetchone()
+        subject = "Your Account Has Been Unblocked"
+        body = f"""
+        <html>
+            <body>
+                <p>Hi {user['user_name']},</p>
+                <p>Your account has been unblocked. You can now log in and continue using our services.</p>
+            </body>
+        </html>
+        """
+        # Send the email
+        x.send_email(user["user_email"], subject, body)
+        db.commit()
+
+        btn_block = render_template("___btn_block_user.html", user={"user_pk": user_pk})
+        toast = render_template("___toast.html", message="User unblocked")
+        return f"""
+                <template 
+                mix-target='#unblock-{user_pk}'
+                mix-replace>
+                    {btn_block}
+                </template>
+                <template mix-target="#toast" mix-bottom>
+                    {toast}
+                </template>
+                """
+        
+    except Exception as ex:
+
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>Database error</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
