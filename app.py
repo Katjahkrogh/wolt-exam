@@ -211,7 +211,13 @@ def view_admin():
         if active_tab not in allowed_tabs:
             active_tab = 'users'
 
-        return render_template("view_admin.html", users=users, active_tab=active_tab, items=items, user=user)
+        allowed_secondary_tabs = ['Customers', 'Restaurants', 'Partners']
+        active_secondary_tab = request.args.get('secondary_tab', 'Customers')  
+        # Set default 'customers', if something fails
+        if active_secondary_tab not in allowed_secondary_tabs:
+            active_secondary_tab = 'Customers'
+
+        return render_template("view_admin.html", users=users, active_tab=active_tab, active_secondary_tab=active_secondary_tab, items=items, user=user)
 
     except Exception as ex:
         ic(ex)
