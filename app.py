@@ -657,12 +657,11 @@ def unblock_user(user_pk):
         if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
 
         user_pk = x.validate_uuid4(user_pk)
-        user_blocked_at = int(time.time())
         user_updated_at = int(time.time())
 
         db, cursor = x.db()
-        q = 'UPDATE users SET user_blocked_at = %s, user_updated_at = %s WHERE user_pk = %s'
-        cursor.execute(q, (user_blocked_at, user_updated_at, user_pk))
+        q = ('UPDATE users SET user_blocked_at = 0, user_updated_at = %s WHERE user_pk = %s AND user_blocked_at != 0')
+        cursor.execute(q, (user_updated_at, user_pk))
         if cursor.rowcount != 1: x.raise_custom_exception("cannot unblock user", 400)
 
         # Prepare the block email content
@@ -787,12 +786,11 @@ def unblock_item(item_pk):
         if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
 
         item_pk = x.validate_uuid4(item_pk)
-        item_blocked_at = int(time.time())
         item_updated_at = int(time.time())
 
         db, cursor = x.db()
-        q = 'UPDATE items SET item_blocked_at = %s, item_updated_at = %s WHERE item_pk = %s'
-        cursor.execute(q, (item_blocked_at, item_updated_at, item_pk))
+        q = 'UPDATE items SET item_blocked_at = 0, item_updated_at = %s WHERE item_pk = %s AND item_blocked_at != 0'
+        cursor.execute(q, (item_updated_at, item_pk))
         if cursor.rowcount != 1: x.raise_custom_exception("cannot unblock item", 400)
 
         # Get info on item and user
