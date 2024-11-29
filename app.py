@@ -109,13 +109,14 @@ def view_customer():
             FROM users
             LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
             LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+            WHERE roles.role_name = 'restaurant'
             """
         cursor.execute(q)
-        users = cursor.fetchall()
+        restaurants = cursor.fetchall()
 
         # Pass users and active_tab to the template
         active_tab = request.args.get('tab', 'restaurants')
-        return render_template("view_customer.html", users=users, active_tab=active_tab)
+        return render_template("view_customer.html", restaurants=restaurants, active_tab=active_tab)
 
     except Exception as ex:
         ic(ex)
@@ -133,6 +134,67 @@ def view_customer():
         if "db" in locals(): 
             db.close()
 
+##############################
+
+@app.get("/restaurant/<user_pk>")
+@x.no_cache
+def view_restaurant_items(user_pk):
+    try:
+        if not session.get("user", ""): 
+            return redirect(url_for("view_login"))
+
+        user_pk = x.validate_uuid4(user_pk)
+
+        db, cursor = x.db()
+
+        # Fetch the restaurant's information
+        q = """
+            SELECT 
+                users.user_pk,
+                users.user_name,
+                users.user_last_name,
+                users.user_email,
+                users.user_avatar,
+                roles.role_name
+            FROM users
+            LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+            LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+            WHERE users.user_pk = %s AND roles.role_name = 'restaurant'
+        """
+        cursor.execute(q, (user_pk,))
+        restaurant = cursor.fetchone()
+
+        if not restaurant:
+            return "<p>Restaurant not found.</p>", 404
+
+        # Fetch the items for this restaurant
+        q = """
+            SELECT 
+                item_pk,
+                item_title,
+                item_price,
+                item_image
+            FROM items
+            WHERE item_user_fk = %s AND item_deleted_at = 0 AND item_blocked_at = 0
+        """
+        cursor.execute(q, (user_pk,))
+        items = cursor.fetchall()
+
+        # Render the template with the restaurant and its items
+        return render_template("view_restaurant_items.html", restaurant=restaurant, items=items)
+
+    except Exception as ex:
+        ic(ex)
+        # Rollback if needed
+        if "db" in locals(): 
+            db.rollback()
+        return "<p>System under maintenance. Please try again later.</p>", 500
+
+    finally:
+        if "cursor" in locals(): 
+            cursor.close()
+        if "db" in locals(): 
+            db.close()
 
 ##############################
 @app.get("/profile")

@@ -1,0 +1,28 @@
+{% if session['user'] %}
+        {% include "_top_logged.html" %}
+{% else %}
+        {% include "_top.html" %}
+{% endif %}
+
+<main>
+    <section>
+        <h1 class="mb-10">{{ restaurant["user_last_name"] }}</h1>
+
+        <h2 class="mt-20">Menu</h2>
+        <div class="menu-items d-grid cols-3 gap-4">
+            {% for item in items %}
+                <div class="menu-item bg-white rounded-6 shadow-sm ts-500">
+                    <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
+                        alt="{{ item.item_title }}" 
+                        class="w-full h-200px obj-f-cover rounded-top-6">
+                    <div class="pa-2">
+                        <h3>{{ item["item_title"] }}</h3>
+                        <p>{{ item["item_price"] }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+
+{% include "_bottom.html" %}

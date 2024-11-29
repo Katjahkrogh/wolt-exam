@@ -2,19 +2,26 @@
     <h1 class="mb-10">Restaurants - Copenhagen</h1>
     <h2>All restaurants</h2>
     <div class="d-flex flex-col gap-10" md="d-grid cols-2 gap-4" lg="cols-3">
-        {% for user in users[:9] %}
-                <article class="w-70 d-flex flex-col j-content-between overflow-hidden w-100% bg-white rounded-6 shadow-sm ts-500" hover="cursor-pointer scale-101 ts-500">
-                    <div class="relative">
-                        <img src="{{ url_for('static', filename='avatars/' + (user.get('user_avatar') or 'profile_1.jpg')) }}" 
-                            alt="User Avatar" 
-                            class="w-full h-300px obj-f-cover " i-md="h-350px">
-                    </div>
-
-                    <!-- User Last Name (Title) -->
-                    <div class="pa-2 px-6">
-                        <h3>{{ user["user_last_name"] }}</h3>
-                    </div>
-                </article>
+        {% for restaurant in restaurants %}
+        <article class="w-70 d-flex flex-col j-content-between overflow-hidden w-100% bg-white rounded-6 shadow-sm ts-500" hover="cursor-pointer scale-101 ts-500">
+            <a href="{{ url_for('view_restaurant_items', user_pk=restaurant['user_pk']) }}" class="restaurant-link w-100%">
+                <div class="relative">
+                    <img src="{{ url_for('static', filename='avatars/' + (restaurant['user_avatar'] or 'profile_1.jpg')) }}" 
+                        alt="Restaurant Avatar" 
+                        class="w-full h-300px obj-f-cover" i-md="h-350px">
+                </div>
+    
+                <!-- Restaurant Name -->
+                <div class="pa-2 px-6">
+                    <h3>{{ restaurant["user_last_name"] }}</h3>
+                </div>
+            </a>
+        </article>
         {% endfor %}
     </div>
 </section>
+
+
+
+
+
