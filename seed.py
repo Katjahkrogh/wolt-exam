@@ -19,7 +19,7 @@ def insert_user(user):
     """
     q = """
         INSERT INTO users
-        VALUES (%s, %s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s)
+        VALUES (%s, %s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s, %s)
     """
     values = tuple(user.values())
     cursor.execute(q, values)
@@ -50,6 +50,7 @@ try:
             user_pk CHAR(36),
             user_name VARCHAR(20) NOT NULL,
             user_last_name VARCHAR(20) NOT NULL,
+            user_address VARCHAR(50) NOT NULL,
             user_email VARCHAR(100) NOT NULL UNIQUE,
             user_password VARCHAR(255) NOT NULL,
             user_avatar VARCHAR(50),
@@ -112,8 +113,9 @@ try:
     # Insert admin user
     admin_user = {
         "user_pk": str(uuid.uuid4()),
-        "user_name": "Santiago",
-        "user_last_name": "Donoso",
+        "user_name": "Super",
+        "user_last_name": "Admin",
+        "user_address": fake.street_address(),
         "user_email": "admin@fulldemo.com",
         "user_password": generate_password_hash("password"),
         "user_avatar": "profile_10.jpg",
@@ -134,6 +136,7 @@ try:
             "user_pk": str(uuid.uuid4()),
             "user_name": fake.first_name(),
             "user_last_name": fake.last_name(),
+            "user_address": fake.street_address(),
             "user_email": fake.unique.user_name() + "@" + random.choice(domains),
             "user_password": generate_password_hash("password"),
             "user_avatar": "profile_" + str(random.randint(1, 100)) + ".jpg",
@@ -153,6 +156,7 @@ try:
             "user_pk": str(uuid.uuid4()),
             "user_name": fake.first_name(),
             "user_last_name": fake.last_name(),
+            "user_address": fake.street_address(),
             "user_email": fake.unique.email(),
             "user_password": generate_password_hash("password"),
             "user_avatar": "profile_" + str(random.randint(1, 100)) + ".jpg",
@@ -173,6 +177,7 @@ try:
             "user_pk": str(uuid.uuid4()),
             "user_name": fake.first_name(),
             "user_last_name": fake.last_name(),
+            "user_address": fake.street_address(),
             "user_email": fake.unique.email(),
             "user_password": generate_password_hash("password"),
             "user_avatar": "profile_" + str(random.randint(1, 100)) + ".jpg",

@@ -80,7 +80,7 @@ USER_NAME_MIN = 2
 USER_NAME_MAX = 20
 USER_NAME_REGEX = f"^.{{{USER_NAME_MIN},{USER_NAME_MAX}}}$"
 def validate_user_name():
-    error = f"name {USER_NAME_MIN} to {USER_NAME_MAX} characters"
+    error = f"Name {USER_NAME_MIN} to {USER_NAME_MAX} characters"
     user_name = request.form.get("user_name", "").strip()
     if not re.match(USER_NAME_REGEX, user_name): raise_custom_exception(error, 400)
     return user_name
@@ -90,15 +90,33 @@ USER_LAST_NAME_MIN = 2
 USER_LAST_NAME_MAX = 20
 USER_LAST_NAME_REGEX = f"^.{{{USER_LAST_NAME_MIN},{USER_LAST_NAME_MAX}}}$"
 def validate_user_last_name():
-    error = f"last name {USER_LAST_NAME_MIN} to {USER_LAST_NAME_MAX} characters"
-    user_last_name = request.form.get("user_last_name", "").strip() # None
+    error = f"Last name {USER_LAST_NAME_MIN} to {USER_LAST_NAME_MAX} characters"
+    user_last_name = request.form.get("user_last_name", "").strip() 
     if not re.match(USER_LAST_NAME_REGEX, user_last_name): raise_custom_exception(error, 400)
     return user_last_name
 
 ##############################
-REGEX_EMAIL = "^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$"
+USER_ADDRESS_MIN = 2
+USER_ADDRESS_MAX = 50
+USER_ADDRESS_REGEX = r"^(?=.*\d)(?=.*[a-zA-Z]).+$" # CHATGPT, Simple regex to check for a number and a word
+def validate_user_address():
+    user_address = request.form.get("user_address", "").strip()
+
+    # Check min and max lenght
+    if not (USER_ADDRESS_MIN <= len(user_address) <= USER_ADDRESS_MAX):
+        raise_custom_exception("Address must be 2 and 50 characters.", 400)
+
+    # Validate against the regex 
+    if not re.match(USER_ADDRESS_REGEX, user_address):
+        raise_custom_exception("Address invalid", 400)
+
+    return user_address
+
+##############################
+# CHATGPT regex to check email pattern
+REGEX_EMAIL = "^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$" 
 def validate_user_email():
-    error = "email invalid"
+    error = "Email invalid"
     user_email = request.form.get("user_email", "").strip()
     if not re.match(REGEX_EMAIL, user_email): raise_custom_exception(error, 400)
     return user_email
@@ -108,7 +126,7 @@ USER_PASSWORD_MIN = 8
 USER_PASSWORD_MAX = 50
 REGEX_USER_PASSWORD = f"^.{{{USER_PASSWORD_MIN},{USER_PASSWORD_MAX}}}$"
 def validate_user_password():
-    error = f"password {USER_PASSWORD_MIN} to {USER_PASSWORD_MAX} characters"
+    error = f"Password {USER_PASSWORD_MIN} to {USER_PASSWORD_MAX} characters"
     user_password = request.form.get("user_password", "").strip()
     if not re.match(REGEX_USER_PASSWORD, user_password): raise_custom_exception(error, 400)
     return user_password
@@ -116,7 +134,7 @@ def validate_user_password():
 ##############################
 REGEX_UUID4 = "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
 def validate_uuid4(uuid4 = ""):
-    error = f"invalid uuid4"
+    error = f"Invalid uuid4"
     if not uuid4:
         uuid4 = request.values.get("uuid4", "").strip()
     if not re.match(REGEX_UUID4, uuid4): raise_custom_exception(error, 400)
@@ -125,7 +143,6 @@ def validate_uuid4(uuid4 = ""):
 ##############################
 UPLOAD_ITEM_FOLDER = './images'
 ALLOWED_ITEM_FILE_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
-
 def validate_item_image():
     if 'item_file' not in request.files: raise_custom_exception("item_file missing", 400)
     file = request.files.get("item_file", "")

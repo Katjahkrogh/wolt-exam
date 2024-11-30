@@ -2,7 +2,15 @@
 <main class="mx-8" xl="mx-16">
     <section lg="max-w-900px mx-auto">
         <div class="d-flex flex-row j-content-between a-items-start" i-sm="mb-6">
-            <h1 i-sm="text-lh-resp">Profile</h1>
+            <div class="d-flex flex-row gap-4 a-items-baseline">
+                <h1 i-sm="text-lh-resp">Profile</h1>
+                {% if 'restaurant' in session['user'].get('roles', []) %}
+                    <h2 class="text-120">Restaurant</h2>
+                {% endif %} 
+                {% if 'partner' in session['user'].get('roles', []) %}
+                    <h2 class="text-120">Partner</h2>
+                {% endif %} 
+            </div>
             <form method="POST" action="{{url_for('logout')}}">
                 <button class="light-btn" hover="bg-c-#D6EFFA">
                     Logout
@@ -15,15 +23,15 @@
             <div class="d-flex flex-row j-content-center a-items-center gap-16">
                 <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-28 rounded-full shadow-lg " alt="profile picture">
                 <div class="f-flex" >
-                    <h2 class="text-200" i-sm="mb-6">{{ user["user_name"] }} {{ user["user_last_name"] }}</h2>
+                    <h2 class="text-200" i-sm="mb-6">{{ user["user_name"] }} {% if 'customer' in session['user'].get('roles', []) %} {{ user["user_last_name"] }} {% endif %}</h2>
                     <div class="d-flex flex-row gap-16 a-items-center j-content-start" i-sm="flex-col a-items-start gap-4">
                         <div>
                             <h3>Email</h3>
                             <p>{{ user["user_email"] }}</p>
                         </div>
                         <div>
-                            <h3>Email</h3>
-                            <p>{{ user["user_email"] }}</p>
+                            <h3>Address</h3>
+                            <p>{{ user["user_address"] }}</p>
                         </div>
                     </div>
                 </div>

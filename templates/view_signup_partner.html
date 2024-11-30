@@ -3,8 +3,10 @@
 
 <main class="d-flex min-h-80vh j-content-center a-items-center">
     <form id="frm_user_signup" class="w-25% d-flex flex-col gap-4 mx-auto">
-        <h1 class="text-200">Create an account</h1>
-        <h2>Volt Partner</h2>
+        <div> 
+            <h2 class="text-w-bold">Volt Partner</h2>
+            <h1 class="text-200 -mt-2">Create an account</h1>
+        </div>
         {{message}}
         <div class="d-flex flex-col">
             <label for="user_name">
@@ -13,13 +15,19 @@
             <input name="user_name" type="text" mix-check="{{ x.USER_NAME_REGEX }}">
         </div>
 
-
         <div class="d-flex flex-col">
             <label for="user_last_name">
                 <span>Last name</span>
             </label>
             <input name="user_last_name" type="text" mix-check="{{ x.USER_LAST_NAME_REGEX }}">
-        </div>        
+        </div>
+        
+        <div class="d-flex flex-col">
+            <label for="user_address">
+                <span>Address</span>
+            </label>
+            <input name="user_address" type="text" mix-check="{{ x.USER_ADDRESS_REGEX }}">
+        </div>     
 
         <div class="d-flex flex-col">
             <label for="user_email">
@@ -32,7 +40,7 @@
         <div class="d-flex flex-col">
             <label for="user_password" class="d-flex">
                 <span>Password</span>
-                <span class="ml-auto text-c-gray:+25">{{ x.USER_PASSWORD_MIN }} to {{ x.USER_PASSWORD_MAX }} chars</span>
+                <span class="ml-auto text-c-gray:+25">{{ x.USER_PASSWORD_MIN }} to {{ x.USER_PASSWORD_MAX }} characters</span>
             </label>
             <input name="user_password" type="text" mix-check="{{ x.REGEX_USER_PASSWORD }}">
         </div>        
@@ -40,10 +48,7 @@
         <button mix-post="/users/partner" mix-data="#frm_user_signup">
             Signup
         </button>
-        <!-- <div class="d-flex j-content-center a-items-center gap-3 text-c-grey4">
-        <p>Already a Volt partner?</p>
-        <a href="{{url_for('view_login')}}" class="text-c-grey4 text-w-bold">Login</a>
-        </div> -->
+
     </form>
 
 </main>

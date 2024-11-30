@@ -135,6 +135,7 @@ def view_customer():
                 users.user_pk,
                 users.user_name,
                 users.user_last_name,
+                users.user_address,
                 users.user_email,
                 users.user_avatar,
                 roles.role_name
@@ -185,6 +186,7 @@ def view_restaurant_items(user_pk):
                 users.user_pk,
                 users.user_name,
                 users.user_last_name,
+                users.user_address,
                 users.user_email,
                 users.user_avatar,
                 roles.role_name
@@ -283,6 +285,7 @@ def view_admin():
                 users.user_pk,
                 users.user_name,
                 users.user_last_name,
+                users.user_address,
                 users.user_email,
                 users.user_blocked_at,
                 roles.role_name
@@ -379,6 +382,7 @@ def signup(role):
         # Validate input fields
         user_name = x.validate_user_name()
         user_last_name = x.validate_user_last_name()
+        user_address = x.validate_user_address()
         user_email = x.validate_user_email()
         user_password = x.validate_user_password()
         hashed_password = generate_password_hash(user_password)
@@ -408,8 +412,8 @@ def signup(role):
         user_role_pk = role_row["role_pk"]
 
         # Insert user into the `users` table
-        q1 = 'INSERT INTO users VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-        cursor.execute(q1, (user_pk, user_name, user_last_name, user_email, 
+        q1 = 'INSERT INTO users VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+        cursor.execute(q1, (user_pk, user_name, user_last_name, user_address, user_email, 
                             hashed_password, user_avatar, user_created_at, 
                             user_deleted_at, user_blocked_at, user_updated_at, 
                             user_verified_at, user_verification_key))
@@ -499,6 +503,7 @@ def login():
             "user_pk": rows[0]["user_pk"],
             "user_name": rows[0]["user_name"],
             "user_last_name": rows[0]["user_last_name"],
+            "user_address": rows[0]["user_address"],
             "user_email": rows[0]["user_email"],
             "user_avatar": rows[0].get("user_avatar"), 
             "roles": roles
