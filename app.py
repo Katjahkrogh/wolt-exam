@@ -250,8 +250,19 @@ def view_partner():
     user = session.get("user")
     if len(user.get("roles", "")) > 1:
         return redirect(url_for("view_choose_role"))
-    return make_response
+    return render_template("view_profile.html", user=user, title="partner")
 
+##############################
+@app.get("/restaurant")
+@x.no_cache
+def view_restaurant():
+    if not session.get("user", ""): 
+        return redirect(url_for("view_login"))
+    user = session.get("user")
+    if len(user.get("roles", "")) > 1:
+        return redirect(url_for("view_choose_role"))
+    active_tab = request.args.get('tab', 'your_restaurant')
+    return render_template("view_restaurant.html", user=user, active_tab=active_tab, title="Restaurant")
 
 ##############################
 @app.get("/admin")
@@ -361,80 +372,6 @@ def logout():
 
 
 ##############################
-# @app.post("/users")
-# @x.no_cache
-# def signup():
-#     try:
-#         # Validate input fields
-#         user_name = x.validate_user_name()
-#         user_last_name = x.validate_user_last_name()
-#         user_email = x.validate_user_email()
-#         user_password = x.validate_user_password()
-#         hashed_password = generate_password_hash(user_password)
-        
-#         # Generate user details
-#         user_pk = str(uuid.uuid4())
-#         user_avatar = "profile_" + str(random.randint(1, 100)) + ".jpg"
-#         user_created_at = int(time.time())
-#         user_deleted_at = 0
-#         user_blocked_at = 0
-#         user_updated_at = 0
-#         user_verified_at = 0
-#         user_verification_key = str(uuid.uuid4())
-
-#         # Database connection
-#         db, cursor = x.db()
-        
-#         # Insert user into the `users` table
-#         q1 = 'INSERT INTO users VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-#         cursor.execute(q1, (user_pk, user_name, user_last_name, user_email, 
-#                             hashed_password, user_avatar, user_created_at, 
-#                             user_deleted_at, user_blocked_at, user_updated_at, 
-#                             user_verified_at, user_verification_key))
-
-#         # Assign default role to the user -- TODO: Change this 
-#         default_role_pk = "c56a4180-65aa-42ec-a945-5fd21dec0538"  
-#         q2 = 'INSERT INTO users_roles (user_role_user_fk, user_role_role_fk) VALUES (%s, %s)'
-#         cursor.execute(q2, (user_pk, default_role_pk))
-
-#         # Commit changes
-#         db.commit()
-#         # Prepare the verification email content
-#         subject = "Verify Your Account"
-#         body = f"""
-#         <html>
-#             <body>
-#                 <p>Hi {user_name},</p>
-#                 <p>Thank you for signing up! Please verify your account by clicking the link below:</p>
-#                 <p><a href="http://127.0.0.1/verify/{user_verification_key}">Verify My Account</a></p>
-#             </body>
-#         </html>
-#         """
-        
-#         # Send the email
-#         x.send_email(user_email, subject, body)
-
-#         # Return success message
-#         return "<template mix-target='main'>Please check your email to verify your account.</template>", 200
-
-    
-#     except Exception as ex:
-#         ic(ex)
-#         if "db" in locals(): db.rollback()
-#         if isinstance(ex, x.CustomException): 
-#             toast = render_template("___toast.html", message=ex.message)
-#             return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
-#         if isinstance(ex, x.mysql.connector.Error):
-#             ic(ex)
-#             if "users.user_email" in str(ex): 
-#                 toast = render_template("___toast.html", message="email not available")
-#                 return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", 400
-#             return f"""<template mix-target="#toast" mix-bottom>System upgrating</template>""", 500        
-#         return f"""<template mix-target="#toast" mix-bottom>System under maintenance</template>""", 500    
-#     finally:
-#         if "cursor" in locals(): cursor.close()
-#         if "db" in locals(): db.close()
-
 @app.post("/users/<role>")
 @x.no_cache
 def signup(role):
@@ -459,7 +396,7 @@ def signup(role):
         # Database connection
         db, cursor = x.db()
 
-        # Dynamically fetch the role_pk based on the `role` route parameter
+        # fetch the role_pk based on the `role` route parameter
         q_fetch_role = "SELECT role_pk FROM roles WHERE role_name = %s"
         cursor.execute(q_fetch_role, (role,))
         role_row = cursor.fetchone()
@@ -477,7 +414,7 @@ def signup(role):
                             user_deleted_at, user_blocked_at, user_updated_at, 
                             user_verified_at, user_verification_key))
 
-        # Assign the dynamically fetched role to the user
+        # Assign the fetched role to the user
         q2 = 'INSERT INTO users_roles (user_role_user_fk, user_role_role_fk) VALUES (%s, %s)'
         cursor.execute(q2, (user_pk, user_role_pk))
 

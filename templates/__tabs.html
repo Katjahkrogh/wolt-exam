@@ -11,6 +11,18 @@
             <img src="{{ url_for('static', filename='img/fork_knife.svg') }}" alt="" class="h-5">
             <p>Restaurants</p>
         </a>
+    {% elif 'restaurant' in session['user'].get('roles', []) %}
+        <!-- Tabs for Restaurant -->
+        <a href="{{ url_for('view_restaurant', tab='add_items') }}" class="tab-btn {% if active_tab == 'add_items' %}active{% endif %}"
+            data-tab="add_items" hover="{{ 'bg-c-grey2 rounded-full' if active_tab != 'add_items' else '' }}">
+            <img src="{{ url_for('static', filename='img/items.svg') }}" alt="" class="h-5">
+            <p>Add items</p>
+        </a>
+        <a href="{{ url_for('view_restaurant', tab='your_restaurant') }}" class="tab-btn {% if active_tab == 'your_restaurant' %}active{% endif %}"
+            data-tab="you_restaurant" hover="{{ 'bg-c-grey2 rounded-full' if active_tab != 'your_restaurant' else '' }}">
+            <img src="{{ url_for('static', filename='img/fork_knife.svg') }}" alt="" class="h-5">
+            <p>Your restaurant</p>
+        </a>
     {% elif 'admin' in session['user'].get('roles', []) %}
         <!-- Tabs for Admin -->
         <a href="{{ url_for('view_admin', tab='items') }}" class="tab-btn {% if active_tab == 'items' %}active{% endif %}"

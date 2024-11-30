@@ -1,0 +1,22 @@
+
+{% if session['user'] %}
+        {% include "_top_logged.html" %}
+{% else %}
+        {% include "_top.html" %}
+{% endif %}
+<main>
+{% if active_tab == 'add_items' %}
+        <div>
+                <p>form to add items</p>
+        </div>
+{% elif active_tab == 'your_restaurant' %}
+        <div>
+                <h1>{{ user["user_name"] }}</h1>
+                <p>Volt restaurant</p>
+                <h2 class="mt-10">Your active menu</h2>
+                
+        </div>
+{% endif %}
+</main>
+
+{% include "_bottom.html" %}
