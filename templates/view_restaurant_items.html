@@ -9,15 +9,17 @@
         <h1 class="mb-10">{{ restaurant["user_last_name"] }}</h1>
 
         <h2 class="mt-20">Menu</h2>
-        <div class="menu-items d-grid cols-3 gap-4">
+        <div class="menu-items d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" lg="cols-3">
             {% for item in items %}
-                <div class="menu-item bg-white rounded-6 shadow-sm ts-500">
-                    <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
-                        alt="{{ item.item_title }}" 
-                        class="w-full h-200px obj-f-cover rounded-top-6">
-                    <div class="pa-2">
+                <div class="menu-item pa-(0.75rem) rounded-(0.5rem) bg-white rounded-6 shadow-sm ts-500 d-flex cursor-pointer j-content-between a-items-stretch w-full h-full min-h-(8.75rem) p-relative" hover="scale-102">
+                    <div class="pa-2 d-flex flex-col j-content-between gap-(0.25rem) w-full pe-2">
                         <h3>{{ item["item_title"] }}</h3>
-                        <p>{{ item["item_price"] }}</p>
+                        <p class="text-c-(#009DDF)">{{ item["item_price"] }} kr.</p>
+                    </div>
+                    <div class="h-(8.75rem) z-(1) w-(10.875rem) d-block p-relative">
+                        <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
+                        alt="{{ item.item_title }}" 
+                        class="w-full h-full obj-f-cover d-block p-absolute v-align-middle inset-(0) rounded-r-(0.5rem)"/>
                     </div>
                 </div>
             {% endfor %}
