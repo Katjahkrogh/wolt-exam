@@ -915,8 +915,7 @@ def unblock_user(user_pk):
 
 ##############################
 @app.put("/items/<item_pk>")
-
-def update_item(item_pk):
+def item_update(item_pk):
     try:
         # Ensure the user is logged in
         user = session.get("user")
@@ -927,9 +926,9 @@ def update_item(item_pk):
         item_pk = x.validate_uuid4(item_pk)
 
         # Get the form data
-        item_title = request.form.get("item_title")
-        item_price = request.form.get("item_price")
-        item_image = request.form.get("item_image")
+        item_title = request.form.get(f"title-{item_pk}")
+        item_price = request.form.get(f"price-{item_pk}")
+        item_image = request.form.get(f"image-{item_pk}")
 
         # Database update
         db, cursor = x.db()
@@ -948,7 +947,8 @@ def update_item(item_pk):
 
         db.commit()
 
-        return f"""<template mix-redirect='/restaurant'></template>"""
+        return """<template mix-redirect="/restaurants"></template>"""
+
 
     except Exception as e:
         ic(e)
