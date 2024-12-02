@@ -10,12 +10,12 @@
         <h2 class="mb-4">Menu</h2>
         <div class="d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" xl="cols-3">
             {% for item in items %}
-                <div id="menuItem-{{ item['item_pk'] }}"  class="pa-4 rounded-6 bg-white shadow-sm ts-500 d-flex cursor-pointer j-content-between h-full p-relative" hover="scale-101">
+                <div id="menuItem-{{ item['item_pk'] }}"  class="pa-4 rounded-6 bg-white shadow-sm ts-500 d-flex cursor-pointer j-content-between h-full p-relative" hover="scale-104">
                     <div class=" d-flex flex-col j-content-between">
                         <h3>{{ item["item_title"] }}</h3>
                         <p class="text-c-primary">DKK {{ item["item_price"] }}</p>
                     </div>
-                    <div class="h-(8rem) z-5 w-(8rem) p-relative">
+                    <div class="h-(6.75rem) z-5 w-(10rem) p-relative">
                         <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
                         alt="{{ item.item_title }}" 
                         class="w-full h-full obj-f-cover p-absolute rounded-6"/> 
