@@ -42,7 +42,9 @@
             </form>
         </section>
     </nav>
-    {% include "__tabs.html" %}
+    {% if request.endpoint not in ['view_restaurant_items', 'view_profile'] %}
+        {% include "__tabs.html" %}
+    {% endif %}
 </header>
 
     <div id="toast" class="d-flex flex-col j-content-center p-fixed w-full top-4 z-10"></div>

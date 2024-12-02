@@ -4,17 +4,39 @@
 {% else %}
         {% include "_top.html" %}
 {% endif %}
+
 <main>
 {% if active_tab == 'add_items' %}
         <div>
                 <p>form to add items</p>
         </div>
+
 {% elif active_tab == 'your_restaurant' %}
         <div>
-                <h1>{{ user["user_name"] }}</h1>
-                <p>Volt restaurant</p>
-                <h2 class="mt-10">Your active menu</h2>
-                
+        <h1 class="mt-10">Your active menu</h1>
+        {% if items %}
+                <div class="d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" xl="cols-3">
+                {% for item in items %}
+                        <div id="menuItem-{{ item['item_pk'] }}"  class="pa-4 rounded-6 bg-white shadow-sm ts-500 d-flex cursor-pointer j-content-between h-full p-relative" hover="scale-101">
+                        <div class=" d-flex flex-col j-content-between">
+                                <h3>{{ item["item_title"] }}</h3>
+                                <p class="text-c-primary">DKK {{ item["item_price"] }}</p>
+                        </div>
+                        <div class="h-(8rem) z-5 w-(8rem) p-relative">
+                                <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
+                                alt="{{ item.item_title }}" 
+                                class="w-full h-full obj-f-cover p-absolute rounded-6"/> 
+                        
+                                <div class="p-absolute z-10 top-0 right-0 bg-c-secondary rounded-t-r-5 rounded-b-l-xl pa-3">
+                                <img src="{{ url_for('static', filename='img/add.svg') }}" alt="add item" class="w-3 mx-1">
+                                </div>
+                        </div>
+                        </div>
+                {% endfor %}
+                </div>
+        {% else %}
+                <h2>No items currently on your menu</h2> 
+        {% endif %}
         </div>
 {% endif %}
 </main>

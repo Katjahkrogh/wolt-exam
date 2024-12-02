@@ -23,7 +23,7 @@ Session(app)
 ##############################
 ##############################
 
-def _________GET_________(): pass
+def ______GET______(): pass
 
 ##############################
 ##############################
@@ -129,25 +129,48 @@ def view_customer():
         if not session.get("user", ""): 
             return redirect(url_for("view_login"))
         
-        # Get all users from the database
+    
         db, cursor = x.db()
-        q = """ SELECT 
+        q = """
+            SELECT 
                 users.user_pk,
                 users.user_name,
                 users.user_last_name,
                 users.user_address,
                 users.user_email,
                 users.user_avatar,
-                roles.role_name
+                roles.role_name,
+                (
+                    SELECT item_image
+                    FROM items
+                    WHERE items.item_user_fk = users.user_pk
+                    AND (items.item_deleted_at = 0 OR items.item_deleted_at IS NULL)
+                    AND (items.item_blocked_at = 0 OR items.item_blocked_at IS NULL)
+                    LIMIT 1
+                ) AS item_image
             FROM users
             LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
             LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
-            WHERE roles.role_name = 'restaurant'
-            """
+            WHERE roles.role_name = 'restaurant';
+        """
         cursor.execute(q)
-        restaurants = cursor.fetchall()
+        rows = cursor.fetchall()
 
-        # Pass users and active_tab to the template
+        # Process the query results directly into a list
+        restaurants = []
+        for row in rows:
+            restaurants.append({
+                "user_pk": row["user_pk"],
+                "user_name": row["user_name"],
+                "user_last_name": row["user_last_name"],
+                "user_address": row["user_address"],
+                "user_email": row["user_email"],
+                "user_avatar": row["user_avatar"],
+                "role_name": row["role_name"],
+                "item_image": row["item_image"] or "dish_1.jpg",  # Default image if no item_image
+            })
+
+        # Pass restaurant and active_tab to the template
         active_tab = request.args.get('tab', 'restaurants')
         return render_template("view_customer.html", restaurants=restaurants, active_tab=active_tab, title="Volt")
 
@@ -241,7 +264,7 @@ def view_profile():
     if len(user.get("roles", "")) > 1:
         return redirect(url_for("view_choose_role"))
     active_tab = request.args.get('tab', 'profile')
-    return render_template("view_profile.html", user=user, active_tab=active_tab, title="Profile")
+    return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="Profile")
 
 ##############################
 @app.get("/partner")
@@ -258,13 +281,67 @@ def view_partner():
 @app.get("/restaurant")
 @x.no_cache
 def view_restaurant():
-    if not session.get("user", ""): 
-        return redirect(url_for("view_login"))
-    user = session.get("user")
-    if len(user.get("roles", "")) > 1:
-        return redirect(url_for("view_choose_role"))
-    active_tab = request.args.get('tab', 'your_restaurant')
-    return render_template("view_restaurant.html", user=user, active_tab=active_tab, title="Restaurant")
+    try:
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))
+        
+        user_pk = user.get("user_pk")
+
+        db, cursor = x.db()
+
+        # Get users
+        q = """ SELECT 
+                users.user_pk,
+                users.user_name,
+                users.user_last_name,
+                users.user_address,
+                users.user_email,
+                users.user_blocked_at,
+                roles.role_name
+                FROM users
+                LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+                LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+                WHERE users.user_pk = %s
+            """
+        cursor.execute(q, (user_pk,))
+        users = cursor.fetchall()
+
+        # Get items
+        q = """
+        SELECT 
+            items.item_pk,
+            items.item_title,
+            items.item_price,
+            items.item_image,
+            items.item_blocked_at,
+            users.user_name
+        FROM items
+        LEFT JOIN users ON items.item_user_fk = users.user_pk
+        WHERE items.item_user_fk = %s AND items.item_blocked_at = 0
+        ORDER BY items.item_title ASC
+        """
+        cursor.execute(q, (user_pk,))
+        items = cursor.fetchall()
+
+        # Determine the active tab
+        active_tab = request.args.get('tab', 'your_restaurant')
+
+        # Render the template
+        return render_template("view_restaurant.html", active_tab=active_tab, user=users, items=items, title="Restaurant")
+
+    except Exception as ex:
+        ic(ex)
+        # Rollback if needed
+        if "db" in locals():
+            db.rollback()
+        return "<p>System under maintenance. Please try again later.</p>", 500
+
+    finally:
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
 
 ##############################
 @app.get("/admin")
@@ -356,7 +433,7 @@ def view_choose_role():
 ##############################
 ##############################
 
-def _________POST_________(): pass
+def ______POST______(): pass
 
 ##############################
 ##############################
@@ -480,11 +557,16 @@ def login():
         cursor.execute(q, (user_email,))
         rows = cursor.fetchall()
 
-        #check if user exist
+        #check if user exists
         if not rows:
             toast = render_template("___toast.html", message="user not registered")
             return f"""<template mix-target="#toast">{toast}</template>""", 400     
         
+        #check if user is deleted
+        if rows[0].get("user_deleted_at") != 0:
+            toast = render_template("___toast.html", message="user is deleted")
+            return f"""<template mix-target="#toast">{toast}</template>""", 400     
+
         #check password
         if not check_password_hash(rows[0]["user_password"], user_password):
             toast = render_template("___toast.html", message="invalid credentials")
@@ -495,7 +577,6 @@ def login():
             toast = render_template("___toast.html", message="User not verified, please check email for the verification link")
             return f"""<template mix-target="#toast">{toast}</template>""", 403
 
-        
         roles = []
         for row in rows:
             roles.append(row["role_name"])
@@ -562,69 +643,12 @@ def create_item():
 
 
 
-##############################
-@app.post("/users/<user_pk>")
-def user_soft_delete(user_pk):
-    try:
-        # Check if the user is logged in
-        user_session = session.get("user", None)
-        if not user_session:
-            return redirect(url_for("view_login"))
-
-        # Ensure the user can only delete their own profile
-        if user_pk != user_session.get("user_pk"):
-            return """<template mix-target='#toast'>You can only delete your own account</template>""", 403
-
-        # Validate UUID
-        user_pk = x.validate_uuid4(user_pk)
-        user_deleted_at = int(time.time())
-
-        # Database connection and update
-        db, cursor = x.db()
-        query = 'UPDATE users SET user_deleted_at = %s WHERE user_pk = %s'
-        cursor.execute(query, (user_deleted_at, user_pk))
-        if cursor.rowcount != 1:
-            x.raise_custom_exception("Cannot delete user", 400)
-
-        db.commit()
-
-        # Log the user out
-        session.clear()
-
-        # Redirect to the index page
-        return f"""<template mix-redirect="/"></template>"""
-
-    except Exception as ex:
-        ic(ex)
-
-        # Rollback in case of database error
-        if "db" in locals():
-            db.rollback()
-
-        # Handle custom exceptions
-        if isinstance(ex, x.CustomException):
-            return f"""<template mix-target="#toast">{ex.message}</template>""", ex.code
-
-        # Handle database errors
-        if isinstance(ex, x.mysql.connector.Error):
-            return "<template>Database error</template>", 500        
-
-        # Handle unexpected errors
-        return "<template>System under maintenance</template>", 500  
-
-    finally:
-        # Close database resources
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
-
 
 ##############################
 ##############################
 ##############################
 
-def _________PUT_________(): pass
+def ______PUT_______(): pass
 
 ##############################
 ##############################
@@ -662,6 +686,99 @@ def user_update():
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
+
+##############################
+@app.put("/users/<user_pk>")
+def user_soft_delete(user_pk):
+    try:
+        # Check if the user is logged in
+        user_session = session.get("user", None)
+        if not user_session:
+            return redirect(url_for("view_login"))
+        
+        # Validate UUID
+        user_pk = x.validate_uuid4(user_pk)
+
+        #getting and validating the entered password
+        entered_password = request.form.get("entered_password") 
+
+        #getting stored password from user
+        db, cursor = x.db()
+        query = "SELECT user_password FROM users WHERE user_pk = %s"
+        cursor.execute(query, (user_pk,))
+        user = cursor.fetchone()
+
+        if not user:
+            x.raise_custom_exception("User not found", 404)
+
+        stored_password_hash = user['user_password']
+
+        # Check if the entered password matches the stored password
+        if not check_password_hash(stored_password_hash, entered_password):
+            return """<template mix-target='#toast'>Incorrect password</template>""", 403
+        
+        ##### if password check passes =
+
+        user_deleted_at = int(time.time())
+
+        # Database connection and update
+        db, cursor = x.db()
+        q = 'UPDATE users SET user_deleted_at = %s WHERE user_pk = %s'
+        cursor.execute(q, (user_deleted_at, user_pk))
+        if cursor.rowcount != 1:
+            x.raise_custom_exception("Cannot delete user", 400)
+
+        db.commit()
+
+
+        # Prepare the block email content
+        q2 = 'SELECT user_name, user_email FROM users WHERE user_pk = %s'
+        cursor.execute(q2, (user_pk,))
+        user = cursor.fetchone()
+        subject = "Your Account Has Been Deleted"
+        body = f"""
+        <html>
+            <body>
+                <p>Hi {user['user_name']},</p>
+                <p>Your account has been deleted. If you believe this is an error, please contact support.</p>
+            </body>
+        </html>
+        """
+        # Send the email
+        x.send_email(user["user_email"], subject, body)
+
+        # Log the user out
+        session.clear()
+
+        # return  f"""<template mix-target="#modal">User is deleted</template>"""
+        # Redirect to the index page
+        return """<template mix-redirect="/"></template>"""
+
+    except Exception as ex:
+        ic(ex)
+
+        # Rollback in case of database error
+        if "db" in locals():
+            db.rollback()
+
+        # Handle custom exceptions
+        if isinstance(ex, x.CustomException):
+            return f"""<template mix-target="#toast">{ex.message}</template>""", ex.code
+
+        # Handle database errors
+        if isinstance(ex, x.mysql.connector.Error):
+            return "<template>Database error</template>", 500        
+
+        # Handle unexpected errors
+        return "<template>System under maintenance</template>", 500  
+
+    finally:
+        # Close database resources
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
 
 
 ##############################
@@ -955,7 +1072,7 @@ def unblock_item(item_pk):
 ##############################
 ##############################
 
-def _________DELETE_________(): pass
+# def ______DELETE______(): pass
 
 ##############################
 ##############################
@@ -967,7 +1084,7 @@ def _________DELETE_________(): pass
 ##############################
 ##############################
 
-def _________BRIDGE_________(): pass
+def ______BRIDGE____(): pass
 
 ##############################
 ##############################

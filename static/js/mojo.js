@@ -34,7 +34,7 @@ mojo({
                 idle : "text-w-black text-250"
             },   
             "h2": {
-                idle : "text-w-bold"
+                idle : "text-w-bold text-170"
             },  
             "h3": {
                 idle : "text-w-bold"
