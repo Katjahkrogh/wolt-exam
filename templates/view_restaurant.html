@@ -14,6 +14,7 @@
 {% elif active_tab == 'your_restaurant' %}
         <div>
         <h1 class="mt-10">Your active menu</h1>
+        <p>{{ message }}</p>
         {% if items %}
                 <div class="d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" xl="cols-3">
                 {% for item in items %}
@@ -32,6 +33,34 @@
                                 </div>
                         </div>
                         </div>
+
+                        <dialog id="modal-{{ item['item_pk'] }}" class="w-40vw max-w-600px p-self-center rounded-6" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
+                            <div>
+                                <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
+                                    alt="{{ item.item_title }}" class="w-full h-250px obj-f-cover rounded-t-6 p-relative" xl="h-300px"/>
+                                <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose-{{ item['item_pk'] }}"  hover="bg-c-#D6EFFA">
+                                    <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
+                                </button> 
+                                <form id="updateItemForm" class="pa-6 d-flex flex-col j-content-between gap-4">
+                                    <div class="d-flex flex-col">
+                                        <label for="item_title">Title</label>
+                                        <input name="item_title" type="text" value="{{ item['item_title'] }}" required>
+                                    </div>
+                                    <div class="d-flex flex-col">
+                                        <label for="item_price">Price</label>
+                                        <input name="item_price" type="number" value="{{ item['item_price'] }}" required>
+                                    </div>
+                                    <div class="d-flex flex-col">
+                                        <label for="item_image">Image URL</label>
+                                        <input name="item_image" type="text" value="{{ item['item_image'] }}" required>
+                                    </div>
+                                
+                                    <button mix-put="/items/{{ item['item_pk'] }}"  mix-data="#updateItemForm" class="w-100% mt-6"> 
+                                        Save changes
+                                    </button>
+                                </form>
+                            </div>
+                        </dialog>
                 {% endfor %}
                 </div>
         {% else %}

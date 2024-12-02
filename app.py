@@ -913,6 +913,53 @@ def unblock_user(user_pk):
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
 
+##############################
+@app.put("/items/<item_pk>")
+
+def update_item(item_pk):
+    try:
+        # Ensure the user is logged in
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))
+
+        # Validate the UUID
+        item_pk = x.validate_uuid4(item_pk)
+
+        # Get the form data
+        item_title = request.form.get("item_title")
+        item_price = request.form.get("item_price")
+        item_image = request.form.get("item_image")
+
+        # Database update
+        db, cursor = x.db()
+
+        update_query = """
+        UPDATE items
+        SET item_title = %s, item_price = %s, item_image = %s
+        WHERE item_pk = %s 
+        """
+        cursor.execute(update_query, (item_title, item_price, item_image, item_pk))
+
+        #check for changes
+        if cursor.rowcount == 0:
+            toast = render_template("___toast.html", message="No changes made")
+            return f"""<template mix-target="#toast">{toast}</template>""", 400
+
+        db.commit()
+
+        return f"""<template mix-redirect='/restaurant'></template>"""
+
+    except Exception as e:
+        ic(e)
+        db.rollback()
+        return "<p>System under maintenance. Please try again later.</p>", 500
+
+    finally:
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
 
 ##############################
 @app.put("/items/block/<item_pk>")

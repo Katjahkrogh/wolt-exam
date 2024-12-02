@@ -8,7 +8,7 @@
     <script src="{{url_for('static', filename='js/map.js')}}"></script>
 {% endif %}
 
-{% if request.endpoint == 'view_restaurant_items' %}
+{% if request.endpoint == 'view_restaurant_items' or 'view_restaurant' %}
     <script src="{{url_for('static', filename='js/modal.js')}}"></script>
 {% endif %}
 
