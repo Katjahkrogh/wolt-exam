@@ -300,8 +300,8 @@ def view_restaurant():
                 users.user_blocked_at,
                 roles.role_name
                 FROM users
-                LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
-                LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+                JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+                JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
                 WHERE users.user_pk = %s
             """
         cursor.execute(q, (user_pk,))
@@ -317,7 +317,7 @@ def view_restaurant():
             items.item_blocked_at,
             users.user_name
         FROM items
-        LEFT JOIN users ON items.item_user_fk = users.user_pk
+        JOIN users ON items.item_user_fk = users.user_pk
         WHERE items.item_user_fk = %s AND items.item_blocked_at = 0
         ORDER BY items.item_title ASC
         """
@@ -342,6 +342,43 @@ def view_restaurant():
             cursor.close()
         if "db" in locals():
             db.close()
+
+
+##############################
+@app.get("/items/<item_pk>")
+@x.no_cache
+def view_edit_items(item_pk):
+    try:
+        db, cursor = x.db()
+
+        # Fetch the item info
+        q = """
+            SELECT 
+                item_title, 
+                item_price, 
+                item_image
+            FROM items
+            WHERE item_pk = %s
+        """
+        cursor.execute(q, (item_pk,))
+        item = cursor.fetchone()
+
+        if not item:
+            return "<h2>Item not found</h2>", 404
+
+        return render_template(
+            "view_edit_items.html", item=item, item_pk=item_pk )
+    
+    except Exception as ex:
+        ic(ex)
+        return "<p>Error occurred</p>", 500
+
+    finally:
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
+
 
 ##############################
 @app.get("/admin")
@@ -915,18 +952,14 @@ def unblock_user(user_pk):
 
 ##############################
 @app.put("/items/<item_pk>")
-
 def update_item(item_pk):
     try:
+        print(f"Item PK: {item_pk}")
         # Ensure the user is logged in
         user = session.get("user")
         if not user:
             return redirect(url_for("view_login"))
 
-        # Validate the UUID
-        item_pk = x.validate_uuid4(item_pk)
-
-        # Get the form data
         item_title = request.form.get("item_title")
         item_price = request.form.get("item_price")
         item_image = request.form.get("item_image")

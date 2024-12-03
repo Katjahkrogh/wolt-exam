@@ -1,0 +1,23 @@
+{% include "_top_logged.html" %}
+<main>
+    <form id="updateItemForm" class="pa-6 d-flex flex-col j-content-between gap-4">
+        <div class="d-flex flex-col">
+                <label for="item_title">Title</label>
+                <input name="item_title" type="text" value="{{ item.item_title }}" required>
+        </div>
+        <div class="d-flex flex-col">
+                <label for="item_price">Price</label>
+                <input name="item_price" type="number" value="{{ item.item_price }}" required>
+        </div>
+        <div class="d-flex flex-col">
+                <label for="item_image">Image URL</label>
+                <input name="item_image" type="text" value="{{ item.item_image }}" required>
+        </div>
+
+        <button mix-put="{{ url_for('update_item', item_pk=item_pk) }}"  mix-data="#updateItemForm" class="w-100% mt-6"> 
+                Save changes
+        </button>
+    </form>
+</main>
+
+{% include "_bottom.html" %}
