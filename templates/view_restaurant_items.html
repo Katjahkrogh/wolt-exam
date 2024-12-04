@@ -37,7 +37,9 @@
                             <h3 class="mb-0">{{ item["item_title"] }}</h3>
                             <p class="text-c-primary mt-0">DKK {{ item["item_price"] }}</p>
                             <div class="d-flex flex-row j-content-between mt-10 gap-2">
-                                <button class="light-btn w-30"  hover="bg-c-#D6EFFA">- +</button>
+                                <div>
+                                <button class="light-btn w-30"  hover="bg-c-#D6EFFA">-</button>
+                                </div>
                                 <button class="w-100% d-flex j-content-between a-items-center"> 
                                     <p>Add to order</p>
                                     <p>DKK {{item["item_price"]}}</p>

@@ -39,7 +39,7 @@
         <section class="d-flex gap-2">
             <form method="GET" action="{{url_for('view_profile')}}">
                 <button class="profile-btn" hover="bg-c-grey3 cursor-pointer"> 
-                    <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 rounded-full" alt="profile picture">
+                    <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 max-w-8 rounded-full" alt="profile picture">
                     Profile
                 </button>
             </form>

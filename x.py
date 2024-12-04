@@ -58,7 +58,6 @@ def no_cache(view):
 
 
 ##############################
-
 def allow_origin(origin="*"):
     def decorator(f):
         @wraps(f)
@@ -98,7 +97,7 @@ def validate_user_last_name():
 ##############################
 USER_ADDRESS_MIN = 2
 USER_ADDRESS_MAX = 50
-USER_ADDRESS_REGEX = r"^(?=.*\d)(?=.*[a-zA-Z]).+$" # CHATGPT, Simple regex to check for a number and a word
+USER_ADDRESS_REGEX = r"^(?=.*\d)(?=.*[a-zA-Z]).+$" # CHATGPT pattern to check for a number and a word
 def validate_user_address():
     user_address = request.form.get("user_address", "").strip()
 
@@ -113,7 +112,7 @@ def validate_user_address():
     return user_address
 
 ##############################
-# CHATGPT regex to check email pattern
+# CHATGPT pattern to check email pattern
 REGEX_EMAIL = "^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$" 
 def validate_user_email():
     error = "Email invalid"
@@ -150,22 +149,43 @@ def validate_uuid4(uuid4 = ""):
     if not re.match(REGEX_UUID4, uuid4): raise_custom_exception(error, 400)
     return uuid4
 
+
 ##############################
-UPLOAD_ITEM_FOLDER = './images'
+ITEM_TITLE_MIN = 2
+ITEM_TITLE_MAX = 20
+ITEM_TITLE_REGEX = f"^.{{{ITEM_TITLE_MIN},{ITEM_TITLE_MAX}}}$"
+def validate_item_title():
+    error = f"Title {ITEM_TITLE_MIN} to {ITEM_TITLE_MAX} characters"
+    item_title = request.form.get("item_title", "").strip()
+    if not re.match(ITEM_TITLE_REGEX, item_title): raise_custom_exception(error, 400)
+    return item_title
+
+##############################
+ITEM_PRICE_REGEX = f"^\d+(\.\d+)?$" #CHATGPT to make price pattern 
+def validate_item_price():
+        error = f"Price must be a number "
+        item_price = request.form.get("item_price", "").strip()
+        if not re.match(ITEM_PRICE_REGEX, item_price): raise_custom_exception(error, 400)
+        return item_price
+
+##############################
+UPLOAD_ITEM_FOLDER = './static/dishes' #saves img in static/dishes folder
 ALLOWED_ITEM_FILE_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 def validate_item_image():
-    if 'item_file' not in request.files: raise_custom_exception("item_file missing", 400)
-    file = request.files.get("item_file", "")
-    if file.filename == "": raise_custom_exception("item_file name invalid", 400)
+    if 'item_image' not in request.files: raise_custom_exception("Image file missing", 400)
 
-    if file:
-        ic(file.filename)
-        file_extension = os.path.splitext(file.filename)[1][1:]
-        ic(file_extension)
-        if file_extension not in ALLOWED_ITEM_FILE_EXTENSIONS: raise_custom_exception("item_file invalid extension", 400)
-        filename = str(uuid.uuid4()) + file_extension
-        return file, filename 
-    
+    file = request.files.get("item_image", "")
+    if file.filename == "": raise_custom_exception("File name invalid", 400)
+
+    #check for filetype
+    file_extension = os.path.splitext(file.filename)[1][1:].lower()
+    if file_extension not in ALLOWED_ITEM_FILE_EXTENSIONS:
+        raise_custom_exception(f"Invalid file type. Allowed types: {', '.join(ALLOWED_ITEM_FILE_EXTENSIONS)}", 400)
+
+    filename = f"{uuid.uuid4()}.{file_extension}" #make unique filename with UUID
+    return file, filename
+
+
 
 ##############################
 def send_email(user_email, subject, body):

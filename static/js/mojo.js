@@ -58,8 +58,8 @@ mojo({
             pattern: "d-flex j-content-center a-items-center gap-2 px-4 founded-full text-c-grey4 cursor-pointer",
         },
         {
-        name: "tab_secondary-btn",
-        pattern: "text-120 text-c-black"
+            name: "tab_secondary-btn",
+            pattern: "text-120 text-c-black"
         },
         {
             name: "active",
@@ -70,8 +70,12 @@ mojo({
             pattern: "border-b-3 border-c-black",
         },
         {
-        name: "bg-customer-hero",
-        pattern: "background-image: url('/static/img/hero.jpg'); background-size: cover; background-repeat: no-repeat;"
+            name: "bg-customer-hero",
+            pattern: "background-image: url('/static/img/hero.jpg'); background-size: cover; background-repeat: no-repeat;"
+        },
+        {
+            name: "overlay",
+            body: "background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.7));"
         },
     ]
 })
