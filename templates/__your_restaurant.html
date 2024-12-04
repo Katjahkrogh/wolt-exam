@@ -1,6 +1,11 @@
-<section>
+<section class="p-relative">
     <h1 class="mt-10">Your active menu</h1>
-    <p>{{ message }}</p>
+    {% if message %}
+        <div class="mx-auto p-absolute z-20 ma-auto p-self-center bg-c-primary text-c-white border-1 border-c-primary px-8 py-4 rounded-md" mix-ttl="4000">
+            {{ message }}
+        </div>
+    {% endif %}
+
     {% if items %}
         <div class="d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" xl="cols-3">
         {% for item in items %}
@@ -34,13 +39,30 @@
                     <div class="px-6 pb-6 d-flex flex-row gap-2">
                         
                         <form class="w-50%" method="GET" action="{{ url_for('view_edit_items', item_pk=item.item_pk) }}">
-                                <button class="w-100%" >
-                                        Edit item
-                                </button>
+                            <button class="w-100%" >
+                                    Edit item
+                            </button>
                         </form>
-                                <button class="bg-c-red:+2 w-50%" hover="bg-c-red:+8">
-                                    Delete item
+
+                            <button id="deleteBtn" class="bg-c-red:+2 w-50%" hover="bg-c-red:+8">
+                                Delete item
+                            </button>
+
+                            <dialog id="modal" class="p-relative max-w-400px p-self-center rounded-6 pa-10" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
+                                <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose"  hover="bg-c-#D6EFFA">
+                                    <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
                                 </button>
+                                <div class="pa-6 d-flex flex-col j-content-between gap-10">
+                                    <h3 class="mb-0">Sure you want to delete item: "{{ item["item_title"] }}"</h3>
+                                    <form id="deleteItemForm" class="d-flex flex-col j-content-between gap-5">
+                                            <!-- <input name="item_pk" type="text" value="{{ user['user_pk'] }}" id="delete-{{ user['user_pk'] }}"> -->
+                                        
+                                        <button mix-put="/items/delete/{{ item['item_pk'] }}"  mix-data="#deleteItemForm" class="bg-c-red:+2 w-100%" hover="bg-c-red:+8">
+                                            Delete item
+                                        </button>
+                                    </form>
+                                </div>
+                            </dialog>
                     </div>
                 </div>
             </dialog>

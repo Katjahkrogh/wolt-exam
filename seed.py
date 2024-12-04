@@ -185,7 +185,7 @@ try:
             "user_address": fake.street_address(),
             "user_email": fake.unique.email(),
             "user_password": generate_password_hash("password"),
-            "user_avatar": "profile_" + str(random.randint(1, 100)) + ".jpg",
+            "user_avatar": "dish_" + str(random.randint(1, 100)) + ".jpg",
             "user_created_at": int(time.time()),
             "user_deleted_at": 0,
             "user_blocked_at": 0,

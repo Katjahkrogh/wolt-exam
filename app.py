@@ -128,8 +128,7 @@ def view_customer():
     try:
         if not session.get("user", ""): 
             return redirect(url_for("view_login"))
-        
-    
+
         db, cursor = x.db()
         q = """
             SELECT 
@@ -139,41 +138,20 @@ def view_customer():
                 users.user_address,
                 users.user_email,
                 users.user_avatar,
-                roles.role_name,
-                (
-                    SELECT item_image
-                    FROM items
-                    WHERE items.item_user_fk = users.user_pk
-                    AND (items.item_deleted_at = 0 OR items.item_deleted_at IS NULL)
-                    AND (items.item_blocked_at = 0 OR items.item_blocked_at IS NULL)
-                    LIMIT 1
-                ) AS item_image
+                roles.role_name
             FROM users
             LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
             LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
             WHERE roles.role_name = 'restaurant';
         """
         cursor.execute(q)
-        rows = cursor.fetchall()
-
-        # Process the query results directly into a list
-        restaurants = []
-        for row in rows:
-            restaurants.append({
-                "user_pk": row["user_pk"],
-                "user_name": row["user_name"],
-                "user_last_name": row["user_last_name"],
-                "user_address": row["user_address"],
-                "user_email": row["user_email"],
-                "user_avatar": row["user_avatar"],
-                "role_name": row["role_name"],
-                "item_image": row["item_image"] or "dish_1.jpg",  # Default image if no item_image
-            })
+        restaurants = cursor.fetchall()  # Fetch all restaurants
 
         # Pass restaurant and active_tab to the template
         active_tab = request.args.get('tab', 'restaurants')
         return render_template("view_customer.html", restaurants=restaurants, active_tab=active_tab, title="Volt")
 
+    
     except Exception as ex:
         ic(ex)
         # Rollback the database if it exists
@@ -189,6 +167,74 @@ def view_customer():
             cursor.close()
         if "db" in locals(): 
             db.close()
+
+# @app.get("/customer")
+# @x.no_cache
+# def view_customer():
+#     try:
+#         if not session.get("user", ""): 
+#             return redirect(url_for("view_login"))
+        
+    
+#         db, cursor = x.db()
+#         q = """
+#             SELECT 
+#                 users.user_pk,
+#                 users.user_name,
+#                 users.user_last_name,
+#                 users.user_address,
+#                 users.user_email,
+#                 users.user_avatar,
+#                 roles.role_name,
+#                 (
+#                     SELECT item_image
+#                     FROM items
+#                     WHERE items.item_user_fk = users.user_pk
+#                     AND (items.item_deleted_at = 0 OR items.item_deleted_at IS NULL)
+#                     AND (items.item_blocked_at = 0 OR items.item_blocked_at IS NULL)
+#                     LIMIT 1
+#                 ) AS item_image
+#             FROM users
+#             LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+#             LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+#             WHERE roles.role_name = 'restaurant';
+#         """
+#         cursor.execute(q)
+#         rows = cursor.fetchall()
+
+#         # Process the query results directly into a list
+#         restaurants = []
+#         for row in rows:
+#             restaurants.append({
+#                 "user_pk": row["user_pk"],
+#                 "user_name": row["user_name"],
+#                 "user_last_name": row["user_last_name"],
+#                 "user_address": row["user_address"],
+#                 "user_email": row["user_email"],
+#                 "user_avatar": row["user_avatar"],
+#                 "role_name": row["role_name"],
+#                 "item_image": row["item_image"] or "dish_1.jpg",  # Default image if no item_image
+#             })
+
+#         # Pass restaurant and active_tab to the template
+#         active_tab = request.args.get('tab', 'restaurants')
+#         return render_template("view_customer.html", restaurants=restaurants, active_tab=active_tab, title="Volt")
+
+#     except Exception as ex:
+#         ic(ex)
+#         # Rollback the database if it exists
+#         if "db" in locals(): 
+#             db.rollback()
+
+#         # Return an error message
+#         return "<p>System under maintenance. Please try again later.</p>", 500
+
+#     finally:
+#         # Close database resources
+#         if "cursor" in locals(): 
+#             cursor.close()
+#         if "db" in locals(): 
+#             db.close()
 
 ##############################
 
@@ -318,7 +364,7 @@ def view_restaurant():
             users.user_name
         FROM items
         JOIN users ON items.item_user_fk = users.user_pk
-        WHERE items.item_user_fk = %s AND items.item_blocked_at = 0
+        WHERE items.item_user_fk = %s AND items.item_blocked_at = 0 AND items.item_deleted_at = 0
         ORDER BY items.item_title ASC
         """
         cursor.execute(q, (user_pk,))
@@ -328,7 +374,7 @@ def view_restaurant():
         active_tab = request.args.get('tab', 'your_restaurant')
 
         # Render the template
-        return render_template("view_restaurant.html", active_tab=active_tab, x=x, user=users, items=items, title="Restaurant")
+        return render_template("view_restaurant.html", active_tab=active_tab, x=x, user=users, items=items, message=request.args.get("message", ""), title="Restaurant")
 
     except Exception as ex:
         ic(ex)
@@ -545,7 +591,13 @@ def signup(role):
         
         # Generate user details
         user_pk = str(uuid.uuid4())
-        user_avatar = "profile_" + str(random.randint(1, 100)) + ".jpg"
+
+        # Assign avatar based on role
+        if role == "restaurant":
+            user_avatar = "dish_" + str(random.randint(1, 100)) + ".jpg"
+        else:
+            user_avatar = "profile_" + str(random.randint(1, 100)) + ".jpg"
+        
         user_created_at = int(time.time())
         user_deleted_at = 0
         user_blocked_at = 0
@@ -1085,50 +1137,59 @@ def update_item(item_pk):
         if "db" in locals(): db.close()
 
 
-# @app.put("/items/<item_pk>")
-# def update_item(item_pk):
-#     try:
-#         print(f"Item PK: {item_pk}")
-#         # Ensure the user is logged in
-#         user = session.get("user")
-#         if not user:
-#             return redirect(url_for("view_login"))
-
-#         item_title = x.validate_item_title()
-#         item_price = x.validate_item_price()
-#         file, item_image = x.validate_item_image()
-
-#         item_updated_at = int(time.time())
-
-#         # Database update
-#         db, cursor = x.db()
-
-#         q = """
-#         UPDATE items
-#         SET item_title = %s, item_price = %s, item_image = %s, item_updated_at = %s
-#         WHERE item_pk = %s 
-#         """
-#         cursor.execute(q, (item_title, item_price, item_image, item_pk, item_updated_at))
-
-#         #check for changes
-#         if cursor.rowcount == 0:
-#             toast = render_template("___toast.html", message="No changes made")
-#             return f"""<template mix-target="#toast">{toast}</template>""", 400
-
-#         db.commit()
+##############################
+@app.put("/items/delete/<item_pk>")
+def item_soft_delete(item_pk):
+    try:
+        # Check if the user is logged in
+        user_session = session.get("user", None)
+        if not user_session:
+            return redirect(url_for("view_login"))
         
-#         return """<template mix-redirect='/restaurant'></template>""", 200
+        # Validate UUID
+        item_pk = x.validate_uuid4(item_pk)
 
-#     except Exception as e:
-#         ic(e)
-#         db.rollback()
-#         return "<p>System under maintenance. Please try again later.</p>", 500
+        item_deleted_at = int(time.time())
 
-#     finally:
-#         if "cursor" in locals():
-#             cursor.close()
-#         if "db" in locals():
-#             db.close()
+        # Database connection and update
+        db, cursor = x.db()
+        q = 'UPDATE items SET item_deleted_at = %s WHERE item_pk = %s'
+        cursor.execute(q, (item_deleted_at, item_pk))
+        if cursor.rowcount != 1:
+            x.raise_custom_exception("Cannot delete item", 400)
+
+        db.commit()
+
+        return """<template mix-redirect="/restaurant?message=Item+deleted"></template>"""
+        # return redirect(url_for("view_restaurant", message="Item deleted"))
+
+
+    except Exception as ex:
+        ic(ex)
+
+        # Rollback in case of database error
+        if "db" in locals():
+            db.rollback()
+
+        # Handle custom exceptions
+        if isinstance(ex, x.CustomException):
+            return f"""<template mix-target="#toast">{ex.message}</template>""", ex.code
+
+        # Handle database errors
+        if isinstance(ex, x.mysql.connector.Error):
+            return "<template>Database error</template>", 500        
+
+        # Handle unexpected errors
+        return "<template>System under maintenance</template>", 500  
+
+    finally:
+        # Close database resources
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
+
+
 
 ##############################
 @app.put("/items/block/<item_pk>")

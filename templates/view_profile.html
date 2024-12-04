@@ -21,7 +21,11 @@
 
         {% if active_tab == 'profile' %}
             <div class="d-flex flex-row j-content-center a-items-center gap-16">
-                <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-28 max-w-100% rounded-full shadow-lg " alt="profile picture">
+                {% if 'restaurant' in session['user'].get('roles', []) %}
+                    <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-28 max-h-28 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
+                {% else %}
+                    <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-28 max-h-28 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
+                {% endif %}
                 <div class="f-flex" >
                     <h2 class="text-200" i-sm="mb-6">{{ user["user_name"] }} {% if 'customer' in session['user'].get('roles', []) %} {{ user["user_last_name"] }} {% endif %}</h2>
                     <div class="d-flex flex-row gap-16 a-items-center j-content-start" i-sm="flex-col a-items-start gap-4">

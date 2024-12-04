@@ -39,7 +39,11 @@
         <section class="d-flex gap-2">
             <form method="GET" action="{{url_for('view_profile')}}">
                 <button class="profile-btn" hover="bg-c-grey3 cursor-pointer"> 
-                    <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 max-w-8 rounded-full" alt="profile picture">
+                    {% if 'restaurant' in session['user'].get('roles', []) %}
+                    <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-8 max-h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 max-h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
+                    {% endif %}
                     Profile
                 </button>
             </form>

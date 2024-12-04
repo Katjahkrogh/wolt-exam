@@ -12,7 +12,7 @@
     <script src="{{url_for('static', filename='js/modal.js')}}"></script>
 {% endif %}
 
-{% if request.endpoint == 'view_profile' %}
+{% if request.endpoint == 'view_profile' or 'view_restaurant' and active_tab == 'your_restaurant' %}
     <script src="{{url_for('static', filename='js/delete.js')}}"></script>
 {% endif %}
 

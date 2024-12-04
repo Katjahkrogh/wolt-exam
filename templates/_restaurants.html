@@ -6,7 +6,7 @@
         <article class="w-70 d-flex flex-col j-content-between overflow-hidden w-100% bg-white rounded-6 shadow-sm ts-500" hover="cursor-pointer scale-101 ts-500">
             <a href="{{ url_for('view_restaurant_items', user_pk=restaurant['user_pk']) }}" class="restaurant-link w-100%">
                 <div class="relative">
-                    <img src="{{ url_for('static', filename='dishes/' + restaurant['item_image']) }}" 
+                    <img src="{{ url_for('static', filename='dishes/' + restaurant['user_avatar']) }}" 
                         alt="Restaurant picture" 
                         class="w-full h-250px obj-f-cover">
                 </div>
