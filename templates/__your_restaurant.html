@@ -1,0 +1,52 @@
+<section>
+    <h1 class="mt-10">Your active menu</h1>
+    <p>{{ message }}</p>
+    {% if items %}
+        <div class="d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" xl="cols-3">
+        {% for item in items %}
+            <div id="menuItem-{{ item['item_pk'] }}"  class="pa-4 rounded-6 bg-white shadow-sm ts-500 d-flex cursor-pointer j-content-between h-full p-relative" hover="scale-101">
+                <div class=" d-flex flex-col j-content-between">
+                    <h3>{{ item["item_title"] }}</h3>
+                    <p class="text-c-primary">DKK {{ item["item_price"] }}</p>
+                </div>
+                <div class="h-(8rem) z-5 w-(8rem) p-relative">
+                    <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
+                    alt="{{ item.item_title }}" 
+                    class="w-full h-full obj-f-cover p-absolute rounded-6"/> 
+            
+                    <div class="p-absolute z-10 top-0 right-0 bg-c-secondary rounded-t-r-5 rounded-b-l-xl pa-3">
+                    <img src="{{ url_for('static', filename='img/edit.svg') }}" alt="add item" class="w-4 mx-1">
+                    </div>
+                </div>
+            </div>
+
+            <dialog id="modal-{{ item['item_pk'] }}" class="w-40vw max-w-600px p-self-center rounded-6" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
+                <div>
+                    <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
+                        alt="{{ item.item_title }}" class="w-full h-250px obj-f-cover rounded-t-6 p-relative" xl="h-300px"/>
+                    <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose-{{ item['item_pk'] }}"  hover="bg-c-#D6EFFA">
+                        <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
+                    </button> 
+                    <div class=" d-flex flex-col j-content-between pa-6">
+                        <h3>{{ item["item_title"] }}</h3>
+                        <p class="text-c-primary">DKK {{ item["item_price"] }}</p>
+                    </div>
+                    <div class="px-6 pb-6 d-flex flex-row gap-2">
+                        
+                        <form class="w-50%" method="GET" action="{{ url_for('view_edit_items', item_pk=item.item_pk) }}">
+                                <button class="w-100%" >
+                                        Edit item
+                                </button>
+                        </form>
+                                <button class="bg-c-red:+2 w-50%" hover="bg-c-red:+8">
+                                    Delete item
+                                </button>
+                    </div>
+                </div>
+            </dialog>
+        {% endfor %}
+        </div>
+    {% else %}
+            <h2>No items currently on your menu</h2> 
+    {% endif %}
+</section>

@@ -1,8 +1,8 @@
 import random
 from flask import Flask, session, render_template, redirect, url_for, make_response, request
 from flask_session import Session
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import x
 import uuid 
 import time
@@ -275,7 +275,7 @@ def view_partner():
     user = session.get("user")
     if len(user.get("roles", "")) > 1:
         return redirect(url_for("view_choose_role"))
-    return render_template("view_profile.html", user=user, title="partner")
+    return render_template("view_profile.html", user=user, x=x, title="partner")
 
 ##############################
 @app.get("/restaurant")
@@ -328,7 +328,7 @@ def view_restaurant():
         active_tab = request.args.get('tab', 'your_restaurant')
 
         # Render the template
-        return render_template("view_restaurant.html", active_tab=active_tab, user=users, items=items, title="Restaurant")
+        return render_template("view_restaurant.html", active_tab=active_tab, x=x, user=users, items=items, title="Restaurant")
 
     except Exception as ex:
         ic(ex)
@@ -367,7 +367,7 @@ def view_edit_items(item_pk):
             return "<h2>Item not found</h2>", 404
 
         return render_template(
-            "view_edit_items.html", item=item, item_pk=item_pk )
+            "view_edit_items.html", item=item, item_pk=item_pk, x=x )
     
     except Exception as ex:
         ic(ex)
@@ -653,31 +653,46 @@ def login():
 @app.post("/items")
 def create_item():
     try:
-        # TODO: validate item_title, item_description, item_price
+        # Validate inputs
+        item_title = x.validate_item_title()
+        item_price = x.validate_item_price()
         file, item_image_name = x.validate_item_image()
 
-        # Save the image
-        # db, cursor = x.db() -- add somewhere
+        item_pk = str(uuid.uuid4())
+        item_user_fk = session.get("user").get("user_pk")
+        item_deleted_at = 0
+        item_blocked_at = 0
+        item_updated_at = 0
 
+        # Save the image to the upload folder
+        os.makedirs(x.UPLOAD_ITEM_FOLDER, exist_ok=True)
         file.save(os.path.join(x.UPLOAD_ITEM_FOLDER, item_image_name))
+
+        # Insert item into the database
         db, cursor = x.db()
-        # TODO: if saving the image went wrong, then rollback by going to the exception
-        # TODO: Success, commit
-        return item_image_name
-    except Exception as ex:
-        ic(ex)
+        q = """
+            INSERT INTO items (item_pk, item_user_fk, item_title, item_price, item_image, item_deleted_at, item_blocked_at, item_updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(q, (item_pk, item_user_fk, item_title, item_price, item_image_name, item_deleted_at, item_blocked_at, item_updated_at))
+        db.commit()
+
+        # Success response
+        toast = render_template("___toast.html", message="Item added successfully!")
+        return f"""<template mix-target="#toast" mix-bottom>{toast}</template>"""
+    
+    except x.CustomException as ex:
         if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): 
-            toast = render_template("___toast.html", message=ex.message)
-            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
-        if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>System upgrating</template>", 500        
-        return "<template>System under maintenance</template>", 500  
+        toast = render_template("___toast.html", message=ex.message)
+        return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
+    
+    except Exception as ex:
+        if "db" in locals(): db.rollback()
+        return "<template>System under maintenance</template>", 500
+    
     finally:
         if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()    
-
+        if "db" in locals(): db.close()
 
 
 
@@ -960,39 +975,95 @@ def update_item(item_pk):
         if not user:
             return redirect(url_for("view_login"))
 
-        item_title = request.form.get("item_title")
-        item_price = request.form.get("item_price")
-        item_image = request.form.get("item_image")
+        item_title = x.validate_item_title()
+        item_price = x.validate_item_price()
+        
+        # Check if a new image is uploaded, otherwise keep current
+        file = request.files.get("item_image", None)
+        if file and file.filename != "":
+            # Validate and save the new image if present
+            file, item_image_name = x.validate_item_image()
+            os.makedirs(x.UPLOAD_ITEM_FOLDER, exist_ok=True)
+            file.save(os.path.join(x.UPLOAD_ITEM_FOLDER, item_image_name))
+        else:
+            # Keep the current image name if no new file is uploaded
+            item_image_name = request.form.get("existing_item_image", None)  # Make sure this is sent in the form
+
+        item_updated_at = int(time.time())
 
         # Database update
         db, cursor = x.db()
 
-        update_query = """
+        q = """
         UPDATE items
-        SET item_title = %s, item_price = %s, item_image = %s
-        WHERE item_pk = %s 
+        SET item_title = %s, item_price = %s, item_image = %s, item_updated_at = %s
+        WHERE item_pk = %s
         """
-        cursor.execute(update_query, (item_title, item_price, item_image, item_pk))
+        cursor.execute(q, (item_title, item_price, item_image_name, item_updated_at, item_pk))
 
-        #check for changes
+        # Check for changes
         if cursor.rowcount == 0:
             toast = render_template("___toast.html", message="No changes made")
             return f"""<template mix-target="#toast">{toast}</template>""", 400
 
         db.commit()
-
-        return f"""<template mix-redirect='/restaurant'></template>"""
+        
+        return """<template mix-redirect='/restaurant'></template>""", 200
 
     except Exception as e:
         ic(e)
-        db.rollback()
+        if "db" in locals(): db.rollback()
         return "<p>System under maintenance. Please try again later.</p>", 500
 
     finally:
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+# @app.put("/items/<item_pk>")
+# def update_item(item_pk):
+#     try:
+#         print(f"Item PK: {item_pk}")
+#         # Ensure the user is logged in
+#         user = session.get("user")
+#         if not user:
+#             return redirect(url_for("view_login"))
+
+#         item_title = x.validate_item_title()
+#         item_price = x.validate_item_price()
+#         file, item_image = x.validate_item_image()
+
+#         item_updated_at = int(time.time())
+
+#         # Database update
+#         db, cursor = x.db()
+
+#         q = """
+#         UPDATE items
+#         SET item_title = %s, item_price = %s, item_image = %s, item_updated_at = %s
+#         WHERE item_pk = %s 
+#         """
+#         cursor.execute(q, (item_title, item_price, item_image, item_pk, item_updated_at))
+
+#         #check for changes
+#         if cursor.rowcount == 0:
+#             toast = render_template("___toast.html", message="No changes made")
+#             return f"""<template mix-target="#toast">{toast}</template>""", 400
+
+#         db.commit()
+        
+#         return """<template mix-redirect='/restaurant'></template>""", 200
+
+#     except Exception as e:
+#         ic(e)
+#         db.rollback()
+#         return "<p>System under maintenance. Please try again later.</p>", 500
+
+#     finally:
+#         if "cursor" in locals():
+#             cursor.close()
+#         if "db" in locals():
+#             db.close()
 
 ##############################
 @app.put("/items/block/<item_pk>")
