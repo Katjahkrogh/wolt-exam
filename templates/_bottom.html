@@ -9,11 +9,16 @@
 {% endif %}
 
 {% if request.endpoint == 'view_restaurant_items' or 'view_restaurant' %}
-    <script src="{{url_for('static', filename='js/modal.js')}}"></script>
+    <script src="{{url_for('static', filename='js/item.js')}}"></script>
 {% endif %}
 
 {% if request.endpoint == 'view_profile' or 'view_restaurant' and active_tab == 'your_restaurant' %}
     <script src="{{url_for('static', filename='js/delete.js')}}"></script>
+{% endif %}
+
+{% if request.endpoint == 'view_restaurant_items' %}
+    <script src="{{url_for('static', filename='js/cart.js')}}"></script>
+
 {% endif %}
 
 </body>

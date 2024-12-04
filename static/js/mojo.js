@@ -77,5 +77,6 @@ mojo({
             name: "overlay",
             body: "background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.7));"
         },
+        
     ]
 })

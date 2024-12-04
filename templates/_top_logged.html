@@ -40,19 +40,21 @@
             <form method="GET" action="{{url_for('view_profile')}}">
                 <button class="profile-btn" hover="bg-c-grey3 cursor-pointer"> 
                     {% if 'restaurant' in session['user'].get('roles', []) %}
-                    <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-8 max-h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
+                    <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-8 h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
                     {% else %}
-                        <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 max-h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
+                        <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
                     {% endif %}
                     Profile
                 </button>
             </form>
             {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
-            <form method="POST" action="">
-                <button class="rounded-full px-3 d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer"> 
+            
+                <button id="cart" class="p-relative rounded-full px-3 d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer"> 
                     <img src="{{ url_for('static', filename='img/basket.svg') }}" alt="basket" class="w-4">
+                    <span id="cartNumber" class="p-absolute -top-2 -right-2 rounded-full bg-c-primary text-color-white text-90 px-2 pb-1 pt-5px text-lh-4">0</span>
                 </button>
-            </form>
+                {% include "___cart.html" %}
+            
             {% endif %}
         </section>
     </nav>

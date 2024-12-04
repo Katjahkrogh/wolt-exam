@@ -34,13 +34,13 @@
                             <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
                         </button>
                         <div class="pa-6">
-                            <h3 class="mb-0">{{ item["item_title"] }}</h3>
-                            <p class="text-c-primary mt-0">DKK {{ item["item_price"] }}</p>
+                            <h3 id="title-{{ item['item_pk'] }}" class="mb-0">{{ item["item_title"] }}</h3>
+                            <p id="price-{{ item['item_pk'] }}" class="text-c-primary mt-0">DKK {{ item["item_price"] }}</p>
                             <div class="d-flex flex-row j-content-between mt-10 gap-2">
                                 <div>
                                 <button class="light-btn w-30"  hover="bg-c-#D6EFFA">-</button>
                                 </div>
-                                <button class="w-100% d-flex j-content-between a-items-center"> 
+                                <button id="addToCart-{{ item['item_pk'] }}" class="w-100% d-flex j-content-between a-items-center"> 
                                     <p>Add to order</p>
                                     <p>DKK {{item["item_price"]}}</p>
                                     </button>
