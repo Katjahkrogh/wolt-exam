@@ -16,5 +16,8 @@
     <script src="{{url_for('static', filename='js/delete.js')}}"></script>
 {% endif %}
 
+{% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
+<script src="{{url_for('static', filename='js/search.js')}}"></script>
+{% endif %}
 </body>
 </html>

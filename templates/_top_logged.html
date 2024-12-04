@@ -29,15 +29,27 @@
             <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="w-16">
         </a>
         {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
-        <section class="d-none" md="p-relative d-inline-block">
+        <section id="searchForm" class="d-none" md="d-block">
             <form id="frm_search">
-                <input type="search" name="search" id="search" placeholder="Search on Volt..." class="bg-c-(#E4E4E4) h-(2.5rem) text-lh-(1.25rem) rounded-(1.25rem) w-64 text-(0.875rem) border-s-hidden">
+                <div class="p-relative d-flex a-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#fffff" class="bi bi-search p-absolute left-(0.75rem) pointer-e-none" viewBox="0 0 16 16">
+                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                    </svg>
+                    <input type="search" name="search" id="search" placeholder="Search on Volt..." class="bg-c-(#E4E4E4) h-(2.5rem) max-w-auto rounded-(1.25rem) text-(0.875rem) border-s-hidden pl-(2.2rem) box-s-border" md="w-72">
+                </div>
                 <button mix-post="/get-results" mix-data="#frm_search" class="d-none"></button>
             </form>            
         </section>
         {% endif %}
         <section class="d-flex gap-2">
-            <form method="GET" action="{{url_for('view_profile')}}">
+            {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
+            <button id="searchToggle" class="d-block px-3 rounded-full d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer" md="d-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#fffff" class="bi bi-search" viewBox="0 0 18 18">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+            </button>
+            {% endif %}
+            <form id="profileBtn" method="GET" action="{{url_for('view_profile')}}" class="d-block">
                 <button class="profile-btn" hover="bg-c-grey3 cursor-pointer"> 
                     {% if 'restaurant' in session['user'].get('roles', []) %}
                     <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-8 max-h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
@@ -50,7 +62,7 @@
             {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
             <form method="POST" action="">
                 <button class="rounded-full px-3 d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer"> 
-                    <img src="{{ url_for('static', filename='img/basket.svg') }}" alt="basket" class="w-4">
+                    <img src="{{ url_for('static', filename='img/basket.svg') }}" alt="basket" class="w-5">
                 </button>
             </form>
             {% endif %}
