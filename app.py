@@ -702,6 +702,7 @@ def create_item():
 
         item_pk = str(uuid.uuid4())
         item_user_fk = session.get("user").get("user_pk")
+        item_created_at = int(time.time())
         item_deleted_at = 0
         item_blocked_at = 0
         item_updated_at = 0
@@ -713,10 +714,10 @@ def create_item():
         # Insert item into the database
         db, cursor = x.db()
         q = """
-            INSERT INTO items (item_pk, item_user_fk, item_title, item_price, item_image, item_deleted_at, item_blocked_at, item_updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO items (item_pk, item_user_fk, item_title, item_price, item_image, item_created_at, item_deleted_at, item_blocked_at, item_updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(q, (item_pk, item_user_fk, item_title, item_price, item_image_name, item_deleted_at, item_blocked_at, item_updated_at))
+        cursor.execute(q, (item_pk, item_user_fk, item_title, item_price, item_image_name, item_created_at, item_deleted_at, item_blocked_at, item_updated_at))
         db.commit()
 
         # Success response
