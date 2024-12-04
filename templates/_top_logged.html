@@ -43,11 +43,13 @@
                     Profile
                 </button>
             </form>
+            {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
             <form method="POST" action="">
                 <button class="rounded-full px-3 d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer"> 
                     <img src="{{ url_for('static', filename='img/basket.svg') }}" alt="basket" class="w-4">
                 </button>
             </form>
+            {% endif %}
         </section>
     </nav>
     {% if request.endpoint not in ['view_restaurant_items', 'view_profile'] %}
