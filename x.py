@@ -170,7 +170,7 @@ def validate_item_price():
 
 ##############################
 UPLOAD_ITEM_FOLDER = './static/dishes' #saves img in static/dishes folder
-ALLOWED_ITEM_FILE_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+ALLOWED_ITEM_FILE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 def validate_item_image():
     if 'item_image' not in request.files: raise_custom_exception("Image file missing", 400)
 

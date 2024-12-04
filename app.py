@@ -473,17 +473,18 @@ def view_search_results():
 
         db, cursor = x.db()
         # SELECT USERS THAT ARE RESTAURANT AND MATCH RESULT
-        q = """SELECT user_pk, user_avatar, user_address, user_last_name FROM users 
+        q = """SELECT user_pk, user_avatar, user_address, user_name FROM users 
                 JOIN users_roles
                 ON user_pk = user_role_user_fk
                 JOIN roles
-                WHERE role_name = "restaurant" AND user_last_name LIKE %s AND user_deleted_at = 0
+                ON role_pk = user_role_role_fk
+                WHERE role_name = "restaurant" AND user_name LIKE %s AND user_deleted_at = 0
             """
         cursor.execute(q, (f"%{search_text}%", ))
         restaurant_results = cursor.fetchall()
 
         # SELECT ALL ITEMS THAT MATCH RESULT
-        q = """SELECT item_pk, item_title, item_price, item_image, user_last_name FROM items 
+        q = """SELECT item_pk, item_title, item_price, item_image, user_name FROM items 
                 JOIN users
                 ON user_pk = item_user_fk
                 WHERE item_title LIKE %s AND item_deleted_at = 0 
