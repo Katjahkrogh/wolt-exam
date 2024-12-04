@@ -31,7 +31,7 @@
         {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
         <section class="d-none" md="p-relative d-inline-block">
             <form id="frm_search">
-                <input type="search" name="search" id="search" placeholder="Search on Volt..." class="rounded-(1.25rem) w-64">
+                <input type="search" name="search" id="search" placeholder="Search on Volt..." class="bg-c-(#E4E4E4) h-(2.5rem) text-lh-(1.25rem) rounded-(1.25rem) w-64 text-(0.875rem) border-s-hidden">
                 <button mix-post="/get-results" mix-data="#frm_search" class="d-none"></button>
             </form>            
         </section>
