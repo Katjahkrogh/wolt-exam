@@ -1,0 +1,74 @@
+{% if session['user'] %}
+        {% include "_top_logged.html" %}
+{% else %}
+        {% include "_top.html" %}
+{% endif %}
+
+<main>
+    <h1>Results for "{{ search_text }}"</h1>
+    <!-- Restaurants Section -->
+    <section class="mb-8">
+        {% if restaurant_results %}
+        <h2>Restaurants</h2>
+        <div class="d-flex flex-col gap-10" md="d-grid cols-2 gap-4" xl="cols-3">
+            {% for restaurant in restaurant_results %}
+                <article class="w-70 d-flex flex-col j-content-between overflow-hidden w-100% bg-white rounded-6 shadow-sm ts-500" hover="cursor-pointer scale-101 ts-500">
+                    <a href="{{ url_for('view_restaurant_items', user_pk=restaurant['user_pk']) }}" class="restaurant-link w-100%">
+                        <div class="relative">
+                            <img src="{{ url_for('static', filename='avatars/' + restaurant['user_avatar']) }}" 
+                                alt="Restaurant picture" 
+                                class="w-full h-250px obj-f-cover">
+                        </div>
+                        <div class="pa-2 px-6 d-flex flex-row j-content-between a-items-center border-b-2 border-c-grey3 border-s-dashed">
+                            <div>
+                                <h3 class="text-c-black mb-0">{{ restaurant["user_last_name"] }}</h3>
+                                <p class="text-c-grey4 text-90 ma-0">{{ restaurant["user_address"] }}</p>
+                            </div>
+                            <div class="bg-c-secondary pa-2 px-4 rounded-4 text-c-primary text-w-semibold text-100 text-a-center">
+                                <p class="ma-0">20 - 30</p>
+                                <p class="ma-0">min.</p>
+                            </div>
+                        </div>
+                        <div class="px-6 py-2 d-flex flex-row gap-2 a-items-center">
+                            <img src="{{ url_for('static', filename='img/scooter.svg') }}" alt="" class="w-5">
+                            <p class="text-c-primary text-w-semibold text-80 ma-0">DKK 19.00</p>
+                        </div>
+                    </a>
+                </article>
+            {% endfor %}
+        </div>
+        {% else %}
+            <h2>No restaurants found matching "{{ search_text }}"</h2>
+        {% endif %}
+    </section>
+
+    <!-- Items Section -->
+    <section>
+        {% if item_results %}
+        <h2>Items</h2>
+        <div class="d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" xl="cols-3">
+            {% for item in item_results %}
+            <div id="menuItem-{{ item['item_pk'] }}"  class="pa-4 rounded-6 bg-white shadow-sm ts-500 d-flex cursor-pointer j-content-between h-full p-relative" hover="scale-104">
+                <div class=" d-flex flex-col j-content-between">
+                    <h3>{{ item["item_title"] }}</h3>
+                    <p class="text-c-primary">DKK {{ item["item_price"] }}</p>
+                </div>
+                <div class="h-(6.75rem) z-5 w-(10rem) p-relative">
+                    <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
+                    alt="{{ item.item_title }}" 
+                    class="w-full h-full obj-f-cover p-absolute rounded-6"/> 
+                
+                    <div class="p-absolute z-10 top-0 right-0 bg-c-secondary rounded-t-r-5 rounded-b-l-xl pa-3">
+                        <img src="{{ url_for('static', filename='img/add.svg') }}" alt="add item" class="w-3 mx-1">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <h2>No items found matching "{{ search_text }}"</h2>
+        {% endif %}
+        </div>
+    </section>
+</main>
+
+{% include "_bottom.html" %}

@@ -428,6 +428,47 @@ def view_choose_role():
     user = session.get("user")
     return render_template("view_choose_role.html", user=user, title="Choose role")
 
+##############################
+@app.get("/search-results")
+def view_search_results():
+    try:
+        search_text = request.args.get("search", "").replace("-", " ")
+
+        db, cursor = x.db()
+        # SELECT USERS THAT ARE RESTAURANT AND MATCH RESULT
+        q = """SELECT user_pk, user_avatar, user_address, user_last_name FROM users 
+                JOIN users_roles
+                ON user_pk = user_role_user_fk
+                JOIN roles
+                WHERE role_name = "restaurant" AND user_last_name LIKE %s AND user_deleted_at = 0
+            """
+        cursor.execute(q, (f"%{search_text}%", ))
+        restaurant_results = cursor.fetchall()
+
+        # SELECT ALL ITEMS THAT MATCH RESULT
+        q = """SELECT item_pk, item_title, item_price, item_image, user_last_name FROM items 
+                JOIN users
+                ON user_pk = item_user_fk
+                WHERE item_title LIKE %s AND item_deleted_at = 0 
+            """
+        cursor.execute(q, (f"%{search_text}%", ))
+        item_results = cursor.fetchall()
+
+        return render_template("view_search_results.html", search_text=search_text, restaurant_results=restaurant_results, item_results=item_results )
+    
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
 
 ##############################
 ##############################
@@ -641,6 +682,28 @@ def create_item():
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()    
 
+
+##############################
+@app.post("/get-results")
+def send_search_text():
+    try:
+        text = x.validate_search_text()
+
+        if text == "":
+            toast = render_template("___toast", message="Missing search text")
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>"""
+        return f"""<template mix-redirect="/search-results?search={text}"></template>"""
+    except Exception as ex:
+        ic(ex)
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        pass    
 
 
 

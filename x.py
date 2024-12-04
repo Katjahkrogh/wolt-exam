@@ -132,6 +132,16 @@ def validate_user_password():
     return user_password
 
 ##############################
+SEARCH_TEXT_MIN = 2
+SEARCH_TEXT_MAX = 50
+SEARCH_TEXT_REGEX = f"^.{{{SEARCH_TEXT_MIN},{SEARCH_TEXT_MAX}}}$"
+def validate_search_text():
+    error = f"Search text must be between {SEARCH_TEXT_MIN} and {SEARCH_TEXT_MAX} characters."
+    search_text = request.form.get("search", "").strip()  
+    if not re.match(SEARCH_TEXT_REGEX, search_text): raise_custom_exception(error, 400)
+    return search_text
+
+##############################
 REGEX_UUID4 = "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
 def validate_uuid4(uuid4 = ""):
     error = f"Invalid uuid4"

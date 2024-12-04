@@ -64,6 +64,8 @@ try:
         )
     """)
 
+    cursor.execute("ALTER TABLE `users` ADD INDEX(`user_last_name`);")
+
     cursor.execute("""
         CREATE TABLE items (
             item_pk CHAR(36),
@@ -78,6 +80,8 @@ try:
             FOREIGN KEY (item_user_fk) REFERENCES users(user_pk) ON DELETE CASCADE ON UPDATE RESTRICT
         )
     """)
+
+    cursor.execute("ALTER TABLE `items` ADD INDEX(`item_title`);")
 
     cursor.execute("""
         CREATE TABLE roles (

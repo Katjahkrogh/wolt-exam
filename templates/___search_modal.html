@@ -1,0 +1,44 @@
+<dialog id="modal" class="p-relative max-w-600px p-self-center rounded-6 pa-20" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
+    <!-- Close Button -->
+    <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose" hover="bg-c-#D6EFFA">
+        <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="close" class="w-4 p-self-center mt-2">
+    </button>
+
+    <section>
+        <!-- Restaurants Section -->
+        {% if restaurant_results %}
+        <h2>Restaurants</h2>
+        <ul>
+            {% for restaurant in restaurant_results %}
+            <li>
+                <div class="d-flex flex-col">
+                    <span>{{ restaurant['user_last_name'] }}</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <h2>No restaurants found matching "{{ search_text }}"</h2>
+        {% endif %}
+
+        <!-- Items Section -->
+        {% if item_results %}
+        <h2>Items</h2>
+        <ul>
+            {% for item in item_results %}
+            <li>
+                <div>
+                    <span>{{ item['item_title'] }}</span>
+                    <span>by {{ item['user_name'] }}</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <h2>No items found matching "{{ search_text }}"</h2>
+        {% endif %}
+    </section>
+</dialog>
+
+{% include "_bottom.html" %}
+
