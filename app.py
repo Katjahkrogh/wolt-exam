@@ -2,7 +2,6 @@ import random
 from flask import Flask, session, render_template, redirect, url_for, make_response, request
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 import x
 import uuid 
 import time
@@ -106,9 +105,7 @@ def view_signup_restaurant():
 @app.get("/login")
 @x.no_cache
 def view_login():  
-    # ic("#"*20, "VIEW_LOGIN")
     ic(session)
-    # print(session, flush=True)  
     if session.get("user"):
         if len(session.get("user").get("roles")) > 1:
             return redirect(url_for("view_choose_role")) 
@@ -942,7 +939,8 @@ def user_soft_delete(user_pk):
 
         # Check if the entered password matches the stored password
         if not check_password_hash(stored_password_hash, entered_password):
-            return """<template mix-target='#toast'>Incorrect password</template>""", 403
+            toast = render_template("___toast.html", message="Incorrect password")
+            return f"""<template mix-target='#toast'>{toast}</template>""", 403
         
         ##### if password check passes =
 

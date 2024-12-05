@@ -6,7 +6,7 @@
 
 <main>
     <section>
-        <h1 class="mb-8">{{ restaurant["user_name"] }}</h1>
+        <h1 id="restaurantName" class="mb-8">{{ restaurant["user_name"] }}</h1>
         <h2 class="mb-4">Menu</h2>
         <div class="d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" xl="cols-3">
             {% for item in items %}
@@ -34,13 +34,13 @@
                             <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
                         </button>
                         <div class="pa-6">
-                            <h3 class="mb-0">{{ item["item_title"] }}</h3>
-                            <p class="text-c-primary mt-0">DKK {{ item["item_price"] }}</p>
+                            <h3 id="title-{{ item['item_pk'] }}" class="mb-0">{{ item["item_title"] }}</h3>
+                            <p id="price-{{ item['item_pk'] }}" class="text-c-primary mt-0">DKK {{ item["item_price"] }}</p>
                             <div class="d-flex flex-row j-content-between mt-10 gap-2">
                                 <div>
                                 <button class="light-btn w-30"  hover="bg-c-#D6EFFA">-</button>
                                 </div>
-                                <button class="w-100% d-flex j-content-between a-items-center"> 
+                                <button id="addToCart-{{ item['item_pk'] }}" class="w-100% d-flex j-content-between a-items-center"> 
                                     <p>Add to order</p>
                                     <p>DKK {{item["item_price"]}}</p>
                                     </button>
