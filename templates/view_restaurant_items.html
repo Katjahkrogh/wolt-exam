@@ -6,7 +6,18 @@
 
 <main>
     <section>
-        <h1 id="restaurantName" class="mb-8">{{ restaurant["user_name"] }}</h1>
+        <div class="p-relative -mx-8 -mt-10 mb-10" xl="-mx-16">
+            <img src="{{ url_for('static', filename='dishes/' + restaurant['user_avatar'])  }}" 
+                alt="Current Image" 
+                class="w-full h-300px obj-f-cover mb-2" xl="h-350px">
+            <div class="p-absolute w-full h-300px top-0 left-0 overlay z-10 p-relative" xl="h-350px">
+                <div class="p-absolute bottom-8 left-8" xl="left-16">
+                <h1 class="text-c-white mb-0" >{{ restaurant["user_name"] }}</h1>
+                <h3 class="text-c-grey3 text-w-normal">{{ restaurant["user_address"] }}</h3>
+                </div>
+            </div>
+        </div>
+
         <h2 class="mb-4">Menu</h2>
         <div class="d-grid cols-1 gap-4 gap-y-(1.5rem) gap-x-(1rem) mt-(1.5rem)" md="cols-2" xl="cols-3">
             {% for item in items %}

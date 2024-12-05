@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
     // Close the modal when the close button is clicked
-    document.querySelectorAll('[id^="modalClose_"]').forEach(button => {
+    document.querySelectorAll('[id^="modalClose-"]').forEach(button => {
         button.addEventListener("click", function() {
             const itemId = button.id.replace('modalClose-', ''); // Extract itemId from the button's ID
             const modal = document.getElementById('modal-' + itemId); // Get the corresponding modal

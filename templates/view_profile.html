@@ -26,7 +26,7 @@
                 {% else %}
                     <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-28 h-28 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
                 {% endif %}
-                <div class="f-flex" >
+                <div>
                     <h2 class="text-200" i-sm="mb-6">{{ user["user_name"] }} {% if 'customer' in session['user'].get('roles', []) %} {{ user["user_last_name"] }} {% endif %}</h2>
                     <div class="d-flex flex-row gap-16 a-items-center j-content-start" i-sm="flex-col a-items-start gap-4">
                         <div>
@@ -41,30 +41,9 @@
                 </div>
             </div>
         {% elif active_tab == 'edit' %}
-            <div>
-                <p>edit profile</p>
-            </div>
+            {% include "_edit_profile.html" %}
         {% elif active_tab == 'delete' %}
-            <h2 class="mb-10">Delete your Wolt account</h2>
-                <button id="deleteBtn" class="bg-c-red:+2" hover="bg-c-red:+8">Delete My Account</button>
-                
-                <dialog id="modal" class="p-relative max-w-600px p-self-center rounded-6 pa-20" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
-                    <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose"  hover="bg-c-#D6EFFA">
-                        <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
-                    </button>
-                    <div class="pa-6 d-flex flex-col j-content-between gap-10">
-                        <h3 class="mb-0">Enter password to delete your account</h3>
-                        <form id="deleteAccountForm" class="d-flex flex-col j-content-between gap-5">
-                            <div class="d-flex flex-col">
-                                <label for="entered_password" class="d-flex">
-                                    <span> Password</span>
-                                </label>
-                                <input name="entered_password" type="text" id="delete-{{ user['user_pk'] }}">
-                            </div>
-                            <button mix-put="/users/{{ user['user_pk'] }}"  mix-data="#deleteAccountForm" class="bg-c-red:+2 w-100%" hover="bg-c-red:+8">Delete My Account</button>
-                        </form>
-                    </div>
-                </dialog>
+            {% include "_delete_profile.html" %}
         {% endif %}
     </section>
 </main>
