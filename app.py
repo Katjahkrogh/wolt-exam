@@ -238,6 +238,63 @@ def view_customer():
 
 ##############################
 
+@app.get("/api/restaurants")
+def get_restaurants():
+    try:
+        db, cursor = x.db()
+        # Get restaurant details
+        q = """
+            SELECT 
+                users.user_pk,
+                users.user_name,
+                users.user_address,
+                users.user_avatar
+            FROM users
+            JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+            JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+            WHERE roles.role_name = 'restaurant';
+        """
+        cursor.execute(q)
+        restaurants = cursor.fetchall()
+
+        # Generate random lat/lng near Copenhagen
+        def random_coords():
+            latitude = random.uniform(55.65, 55.70) 
+            longitude = random.uniform(12.54, 12.60)  
+            return latitude, longitude
+
+        # Transform rows into JSON structure
+        result = []
+        for row in restaurants:
+            latitude, longitude = random_coords()
+            result.append({
+                "id": row["user_pk"],
+                "name": row["user_name"],
+                "address": row["user_address"],
+                "avatar_url": url_for('static', filename='dishes/' + row["user_avatar"]),
+                "latitude": latitude,
+                "longitude": longitude,
+                "url": url_for("view_restaurant_items", user_pk=row["user_pk"])
+            })
+
+        return {"restaurants": result}, 200
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return """<template mix-target="#toast" mix-bottom>System upgrading</template>""", 500        
+        return """<template mix-target="#toast" mix-bottom>System under maintenance</template>""", 500 
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+##############################
+
 @app.get("/restaurant/<user_pk>")
 @x.no_cache
 def view_restaurant_items(user_pk):

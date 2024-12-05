@@ -3,6 +3,7 @@
 <script src="{{url_for('static', filename='js/app.js')}}"></script>
 <script src="{{url_for('static', filename='js/mixhtml.js')}}"></script>
 <script src="{{url_for('static', filename='js/mojo.js')}}"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 {% if request.endpoint == 'view_customer' and active_tab == 'explore' %}
     <script src="{{url_for('static', filename='js/map.js')}}"></script>
@@ -19,5 +20,6 @@
 {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
 <script src="{{url_for('static', filename='js/search.js')}}"></script>
 {% endif %}
+
 </body>
 </html>

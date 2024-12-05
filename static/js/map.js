@@ -1,7 +1,5 @@
-src = "https://unpkg.com/leaflet/dist/leaflet.js";
-
 // Initialize the map
-var map = L.map('map').setView([55.6845, 12.564148], 12);
+var map = L.map('map').setView([55.6800, 12.5660], 13);
 
 // Add OpenStreetMap tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -9,19 +7,38 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-function test(){
-    var markerLocations = [
-    { coords: [51.5, -0.09], popup: "Marker 1: London" },
-    { coords: [48.8566, 2.3522], popup: "Marker 2: Paris" },
-    { coords: [40.7128, -74.0060], popup: "Marker 3: New York" },
-    { coords: [55.6845, 12.564148], popup: "Marker 4: Tokyo" }
-    ];
+// Fetch restaurants from Flask API
+async function loadRestaurants() {
+    const response = await fetch('/api/restaurants');
+    const data = await response.json();
 
-    // Loop through the markerLocations array and add markers to the map
-    markerLocations.forEach(function(location) {
-        var marker = L.marker(location.coords).addTo(map);
-        marker.bindPopup(location.popup);
-    });
+    if (data.restaurants) {
+        data.restaurants.forEach(restaurant => {
+            const marker = L.marker([restaurant.latitude, restaurant.longitude]).addTo(map);
+            marker.bindPopup(`
+                <article class="w-100% p-10 d-flex flex-col j-content-between overflow-hidden" hover="cursor-pointer scale-101 ts-500">
+                <a href="${restaurant.url}" class="w-100%">
+                    <div class="relative">
+                        <img src="${restaurant.avatar_url}"
+                            alt="${restaurant.name}" 
+                            class="h-30 w-full obj-f-cover">
+                    </div>
+                    <div class="d-flex flex-row j-content-between a-items-center">
+                        <div>
+                            <h3 class="text-c-black mb-0">${restaurant.name}</h3>
+                            <p class="text-c-grey4 text-90 ma-0">${restaurant.address}</p>
+                        </div>
+                    </div>
+                </a>
+                </article> 
+            `);
+        });
+    } else {
+        console.error("Error fetching restaurants:", data.error);
+    }
 }
 
-setTimeout(test, 3000)
+// Call the function to load restaurants on map initialization
+loadRestaurants();
+
+
