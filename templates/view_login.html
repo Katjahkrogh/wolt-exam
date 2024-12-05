@@ -12,10 +12,11 @@
             <input name="user_email" type="text" mix-check="{{ x.REGEX_EMAIL }}">
         </div>
         <div class="d-flex flex-col">
-            <label for="user_password" class="d-flex">
+            <label for="user_password" class="d-flex j-content-between a-items-baseline">
                 <span> Password</span>
+                <span id="deleteBtn" class="text-80 text-c-grey4 cursor-pointer" hover="text-c-black">Forgot password?</span>
             </label>
-            <input name="user_password" type="text" mix-check="{{ x.REGEX_USER_PASSWORD }}">
+            <input name="user_password" type="password" mix-check="{{ x.REGEX_USER_PASSWORD }}">
         </div>
         <button mix-post="/login" mix-data="#frm_user_login">
             Login
@@ -25,6 +26,28 @@
         <a href="{{url_for('view_signup')}}" class="text-w-semibold text-c-grey4" >Signup</a>
         </div>
     </form>
+
+    <dialog id="modal" class="p-relative max-w-600px p-self-center rounded-6 pa-20" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
+        <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose"  hover="bg-c-#D6EFFA">
+            <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
+        </button>
+        <div id="modalContent" class="pa-6 d-flex flex-col j-content-between gap-10">
+            <div>
+                <h3 class="mb-0">Forgot password</h3>
+                <p>Enter your email to recieve a password reset link</p>
+            </div>
+            <form id="resetPasswordForm" class="d-flex flex-col j-content-between gap-5">
+                <div class="d-flex flex-col">
+                    <label for="user_email" class="d-flex">
+                        <span> Email</span>
+                    </label>
+                    <input name="user_email" type="text" id="reset_user_email" mix-check="{{ x.REGEX_EMAIL }}">
+                </div>
+                <button mix-post="/reset-password" mix-data="#resetPasswordForm">Reset password</button>
+            </form>
+        </div>
+    </dialog>
+
 </main>
 
 {% include "_bottom.html" %}

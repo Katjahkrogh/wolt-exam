@@ -1,5 +1,5 @@
 import random
-from flask import Flask, session, render_template, redirect, url_for, make_response, request
+from flask import Flask, session, render_template, redirect, url_for, make_response, request, render_template_string
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 import x
@@ -26,6 +26,9 @@ def ______GET______(): pass
 
 ##############################
 ##############################
+##############################
+
+
 
 ##############################
 @app.get("/test-set-redis")
@@ -37,6 +40,7 @@ def view_test_set_redis():
     # name = redis_client.get("name")
     return "name saved"
 
+
 @app.get("/test-get-redis")
 def view_test_get_redis():
     redis_host = "redis"
@@ -46,11 +50,13 @@ def view_test_get_redis():
     if not name: name = "no name"
     return name
 
+
 ##############################
 @app.get("/")
 def view_index():
     name = "X"
     return render_template("view_index.html", name=name, title="Volt exam")
+
 
 ##############################
 @app.get("/signup")
@@ -68,6 +74,7 @@ def view_signup():
             return redirect(url_for("view_partner"))         
     return render_template("view_signup.html", x=x, title="Signup")
 
+
 ##############################
 @app.get("/signup-partner")
 @x.no_cache
@@ -83,6 +90,7 @@ def view_signup_partner():
         if "partner" in session.get("user").get("roles"):
             return redirect(url_for("view_partner"))         
     return render_template("view_signup_partner.html", x=x, title="Signup partner")
+
 
 ##############################
 @app.get("/signup-restaurant")
@@ -116,6 +124,13 @@ def view_login():
         if "partner" in session.get("user").get("roles"):
             return redirect(url_for("view_partner"))         
     return render_template("view_login.html", x=x, title="Login", message=request.args.get("message", ""))
+
+
+##############################
+@app.get("/reset-password/<password_reset_key>")
+@x.no_cache
+def view_reset_password(password_reset_key):  
+    return render_template("view_reset_password.html", x=x, title="Login", password_reset_key=password_reset_key)
 
 
 ##############################
@@ -165,76 +180,8 @@ def view_customer():
         if "db" in locals(): 
             db.close()
 
-# @app.get("/customer")
-# @x.no_cache
-# def view_customer():
-#     try:
-#         if not session.get("user", ""): 
-#             return redirect(url_for("view_login"))
-        
-    
-#         db, cursor = x.db()
-#         q = """
-#             SELECT 
-#                 users.user_pk,
-#                 users.user_name,
-#                 users.user_last_name,
-#                 users.user_address,
-#                 users.user_email,
-#                 users.user_avatar,
-#                 roles.role_name,
-#                 (
-#                     SELECT item_image
-#                     FROM items
-#                     WHERE items.item_user_fk = users.user_pk
-#                     AND (items.item_deleted_at = 0 OR items.item_deleted_at IS NULL)
-#                     AND (items.item_blocked_at = 0 OR items.item_blocked_at IS NULL)
-#                     LIMIT 1
-#                 ) AS item_image
-#             FROM users
-#             LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
-#             LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
-#             WHERE roles.role_name = 'restaurant';
-#         """
-#         cursor.execute(q)
-#         rows = cursor.fetchall()
-
-#         # Process the query results directly into a list
-#         restaurants = []
-#         for row in rows:
-#             restaurants.append({
-#                 "user_pk": row["user_pk"],
-#                 "user_name": row["user_name"],
-#                 "user_last_name": row["user_last_name"],
-#                 "user_address": row["user_address"],
-#                 "user_email": row["user_email"],
-#                 "user_avatar": row["user_avatar"],
-#                 "role_name": row["role_name"],
-#                 "item_image": row["item_image"] or "dish_1.jpg",  # Default image if no item_image
-#             })
-
-#         # Pass restaurant and active_tab to the template
-#         active_tab = request.args.get('tab', 'restaurants')
-#         return render_template("view_customer.html", restaurants=restaurants, active_tab=active_tab, title="Volt")
-
-#     except Exception as ex:
-#         ic(ex)
-#         # Rollback the database if it exists
-#         if "db" in locals(): 
-#             db.rollback()
-
-#         # Return an error message
-#         return "<p>System under maintenance. Please try again later.</p>", 500
-
-#     finally:
-#         # Close database resources
-#         if "cursor" in locals(): 
-#             cursor.close()
-#         if "db" in locals(): 
-#             db.close()
 
 ##############################
-
 @app.get("/api/restaurants")
 def get_restaurants():
     try:
@@ -801,6 +748,63 @@ def login():
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
 
+##############################
+@app.post("/reset-password")
+def reset_password():
+    try: 
+        user_email = x.validate_user_email()
+
+        db, cursor = x.db()
+        q = """ 
+            SELECT user_pk, 
+            user_name 
+            FROM users 
+            WHERE user_email = %s
+            """
+        cursor.execute(q, (user_email,))  
+        user = cursor.fetchone()
+
+        if not user:
+            toast = render_template("___toast.html", message="User not found with this email")
+            return f"""<template mix-target="#toast">{toast}</template>"""
+
+        user_name = user["user_name"]
+        password_reset_key = user["user_pk"] 
+
+        # Prepare the verification email content
+        subject = "Reset your password"
+        body = f"""
+        <html>
+            <body>
+                <p>Hi {user_name},</p>
+                <p>Click the link below to reset your password</p>
+                <a href="http://127.0.0.1/reset-password/{password_reset_key}">Reset password</a>
+            </body>
+        </html>
+        """
+        
+        # Send the email
+        x.send_email(user_email, subject, body)
+
+        # Return success message
+        return """<template mix-target="#modalContent">
+            <h2>Email sent!</h2>
+            <p>Click the link in the mail to reset your password</p>
+            </template>"""
+        
+    
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>Database error</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
 
 ##############################
 @app.post("/items")
@@ -914,6 +918,54 @@ def user_update():
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
+
+##############################
+@app.post("/update-password/<password_reset_key>")
+@x.no_cache
+def update_password(password_reset_key):
+    try:
+        password_reset_key = x.validate_uuid4(password_reset_key)
+        user_updated_at = int(time.time())
+
+        user_password = x.validate_user_password()
+        hashed_password = generate_password_hash(user_password)
+
+        db, cursor = x.db()
+        q = """ 
+            UPDATE users 
+            SET user_password = %s, user_updated_at = %s
+            WHERE user_pk = %s 
+            """
+        cursor.execute(q, (hashed_password, user_updated_at, password_reset_key))
+
+        if cursor.rowcount != 1: x.raise_custom_exception("cannot reset password", 400)
+
+        db.commit()
+        # render_template_string to render HTML instead of template file
+        return render_template_string("""
+                    <template mix-target="#resetPassword">
+                        <h2>New password saved</h2>
+                        <form method="GET" action="{{ url_for('view_login') }}">
+                            <button> 
+                                Go to login
+                            </button>
+                        </form>
+                    </template>
+                """)
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): return ex.message, ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "Database under maintenance", 500        
+        return "System under maintenance", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()    
+
 
 
 ##############################
@@ -1221,8 +1273,6 @@ def item_soft_delete(item_pk):
         db.commit()
 
         return """<template mix-redirect="/restaurant?message=Item+deleted"></template>"""
-        # return redirect(url_for("view_restaurant", message="Item deleted"))
-
 
     except Exception as ex:
         ic(ex)
@@ -1249,6 +1299,7 @@ def item_soft_delete(item_pk):
         if "db" in locals():
             db.close()
 
+############# IS THIS THE ONE EXCEPT BLAH BLAH WE SHOULD USE MAYBE ? ^^^^^
 
 
 ##############################
@@ -1370,7 +1421,7 @@ def unblock_item(item_pk):
             </body>
         </html>
         """
-        # Send emailen
+        # Send email
         x.send_email(item["user_email"], subject, body)
 
         db.commit()
@@ -1457,3 +1508,6 @@ def verify_user(verification_key):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()    
+
+
+
