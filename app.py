@@ -761,6 +761,11 @@ def login():
         if rows[0].get("user_verified_at") in [0, None]: 
             toast = render_template("___toast.html", message="User not verified, please check email for the verification link")
             return f"""<template mix-target="#toast">{toast}</template>""", 403
+        
+        # Check if the user is blocked
+        if rows[0].get("user_blocked_at") != 0: 
+            toast = render_template("___toast.html", message="User is blocked")
+            return f"""<template mix-target="#toast">{toast}</template>""", 403
 
         roles = []
         for row in rows:
