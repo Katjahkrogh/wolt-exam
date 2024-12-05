@@ -256,8 +256,8 @@ def get_restaurants():
 
         # Generate random lat/lng near Copenhagen
         def random_coords():
-            latitude = random.uniform(55.65, 55.70) 
-            longitude = random.uniform(12.54, 12.60)  
+            latitude = random.uniform(55.65, 55.72) 
+            longitude = random.uniform(12.48, 12.58)  
             return latitude, longitude
 
         # Transform rows into JSON structure

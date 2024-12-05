@@ -1,5 +1,5 @@
 // Initialize the map
-var map = L.map('map').setView([55.6800, 12.5660], 13);
+var map = L.map('map').setView([55.6800, 12.5660], 13.3);
 
 // Add OpenStreetMap tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -40,5 +40,4 @@ async function loadRestaurants() {
 
 // Call the function to load restaurants on map initialization
 loadRestaurants();
-
 

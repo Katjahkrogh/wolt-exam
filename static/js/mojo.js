@@ -31,10 +31,12 @@ mojo({
                 idle : "max-w-100%"
             },
             "h1": {
-                idle : "text-w-black text-250"
+                idle : "text-w-black text-200",
+                md : "text-250",
             },   
             "h2": {
-                idle : "text-w-bold text-170"
+                idle : "text-w-bold text-150",
+                md : "text-170",
             },  
             "h3": {
                 idle : "text-w-bold"
