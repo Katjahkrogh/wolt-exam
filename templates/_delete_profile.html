@@ -1,0 +1,20 @@
+<h2 class="mb-10">Delete your Wolt account</h2>
+    <button id="deleteBtn" class="bg-c-red:+2" hover="bg-c-red:+8">Delete My Account</button>
+    
+    <dialog id="modal" class="p-relative max-w-600px p-self-center rounded-6 pa-20" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
+        <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose"  hover="bg-c-#D6EFFA">
+            <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
+        </button>
+        <div class="pa-6 d-flex flex-col j-content-between gap-10">
+            <h3 class="mb-0">Enter password to delete your account</h3>
+            <form id="deleteAccountForm" class="d-flex flex-col j-content-between gap-5">
+                <div class="d-flex flex-col">
+                    <label for="entered_password" class="d-flex">
+                        <span> Password</span>
+                    </label>
+                    <input name="entered_password" type="text" id="delete-{{ user['user_pk'] }}">
+                </div>
+                <button mix-put="/users/{{ user['user_pk'] }}"  mix-data="#deleteAccountForm" class="bg-c-red:+2 w-100%" hover="bg-c-red:+8">Delete My Account</button>
+            </form>
+        </div>
+    </dialog>

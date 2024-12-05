@@ -40,15 +40,12 @@ function addToCart(itemId, button) {
     cartNumber.innerHTML = totalItemsNumber;
 
     // store item in cartItems array
-    const restaurantTitle = document.querySelector("#restaurantName").innerText;
-
     const container = button.closest("[id^='modal-']");
     const itemTitle = container.querySelector("[id^='title-']").innerText;
     const itemPrice = container.querySelector("[id^='price-']").innerText;
 
     cartItems.push({
     id: itemId,
-    restaurant: restaurantTitle,
     title: itemTitle,
     price: itemPrice,
     });

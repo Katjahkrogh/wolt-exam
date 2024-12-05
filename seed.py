@@ -180,8 +180,8 @@ try:
     for _ in range(50):
         user = {
             "user_pk": str(uuid.uuid4()),
-            "user_name": fake.first_name(),
-            "user_last_name": fake.last_name(),
+            "user_name": fake.last_name(),
+            "user_last_name": "--",
             "user_address": fake.street_address(),
             "user_email": fake.unique.email(),
             "user_password": generate_password_hash("password"),
