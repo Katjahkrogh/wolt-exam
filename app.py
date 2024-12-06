@@ -944,10 +944,10 @@ def add_to_cart():
         session["cart"] = cart
         session.modified = True
 
-        user_pk = request.view_args.get('user_pk')
+        # user_pk = request.view_args.get('user_pk')
 
         # Redirect to the restaurant page after adding item to cart
-        return jsonify({"redirect": f"/restaurant/{user_pk}", "cart": cart, "message": f"{item_title} added to cart."}), 200
+        return jsonify({"cart": cart, "message": f"{item_title} added to cart."}), 200
         #return f"""<template mix-redirect="/restaurant/{restaurant_id}"></template>"""
     
     except x.mysql.connector.Error as e:

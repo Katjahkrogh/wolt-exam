@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
 const cartModal = document.getElementById("cartModal");
 const cartOpen = document.querySelector("#cart");
 const cartClose = document.querySelector("#cartClose");
+const cartNumber = document.querySelector("#cartNumber");
+
 
 // open close cart
 cartOpen.addEventListener("click", function () {
