@@ -13,7 +13,7 @@
     <script src="{{url_for('static', filename='js/item.js')}}"></script>
 {% endif %}
 
-{% if request.endpoint == 'view_profile' or 'view_restaurant' and active_tab == 'your_restaurant' %}
+{% if request.endpoint == 'view_profile' or 'view_login' or 'view_restaurant' and active_tab == 'your_restaurant' %}
     <script src="{{url_for('static', filename='js/delete.js')}}"></script>
 {% endif %}
 
