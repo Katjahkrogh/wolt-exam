@@ -2,7 +2,7 @@
 document.addEventListener("DOMContentLoaded", function() {
     const modal = document.getElementById("modal"); 
 
-    document.querySelector('#deleteBtn').addEventListener("click", function() {                 
+    document.querySelector('#modalOpen').addEventListener("click", function() {                 
         modal.showModal(); 
     });
 

@@ -44,7 +44,7 @@
                             </button>
                         </form>
 
-                            <button id="deleteBtn" class="bg-c-red:+2 w-50%" hover="bg-c-red:+8">
+                            <button id="modalOpen" class="bg-c-red:+2 w-50%" hover="bg-c-red:+8">
                                 Delete item
                             </button>
 
@@ -54,9 +54,7 @@
                                 </button>
                                 <div class="pa-6 d-flex flex-col j-content-between gap-10">
                                     <h3 class="mb-0">Sure you want to delete item: "{{ item["item_title"] }}"</h3>
-                                    <form id="deleteItemForm" class="d-flex flex-col j-content-between gap-5">
-                                            <!-- <input name="item_pk" type="text" value="{{ user['user_pk'] }}" id="delete-{{ user['user_pk'] }}"> -->
-                                        
+                                    <form id="deleteItemForm" class="d-flex flex-col j-content-between gap-5">                                        
                                         <button mix-put="/items/delete/{{ item['item_pk'] }}"  mix-data="#deleteItemForm" class="bg-c-red:+2 w-100%" hover="bg-c-red:+8">
                                             Delete item
                                         </button>

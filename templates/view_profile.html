@@ -10,6 +10,9 @@
                 {% if 'partner' in session['user'].get('roles', []) %}
                     <h2 class="text-120">Partner</h2>
                 {% endif %} 
+                {% if 'admin' in session['user'].get('roles', []) %}
+                    <h2 class="text-120">Admin</h2>
+                {% endif %} 
             </div>
             <form method="POST" action="{{url_for('logout')}}">
                 <button class="light-btn" hover="bg-c-#D6EFFA">
@@ -27,7 +30,7 @@
                     <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-28 h-28 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
                 {% endif %}
                 <div>
-                    <h2 class="text-200" i-sm="mb-6">{{ user["user_name"] }} {% if 'customer' in session['user'].get('roles', []) %} {{ user["user_last_name"] }} {% endif %}</h2>
+                    <h2 class="text-200" i-sm="mb-6">{{ user["user_name"] }} {% if 'customer' in session['user'].get('roles', []) or 'admin' in session['user'].get('roles', []) %} {{ user["user_last_name"] }} {% endif %}</h2>
                     <div class="d-flex flex-row gap-16 a-items-center j-content-start" i-sm="flex-col a-items-start gap-4">
                         <div>
                             <h3>Email</h3>
