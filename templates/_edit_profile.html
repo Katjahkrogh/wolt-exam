@@ -1,18 +1,15 @@
 <h2>Edit your profile </h2>
     <form id="updateProfileForm" class="mb-20">
-        <!-- <div class="d-flex flex-row j-content-center a-items-center gap-16">
-            {% if 'restaurant' in session['user'].get('roles', []) %}
-                <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-28 h-28 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
-            {% else %}
-                <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-28 h-28 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
-            {% endif %}
-        </div> -->
         <div class="d-flex flex-col j-content-between gap-4">
             <div class="d-flex flex-col">
+                {% if 'restaurant' in session['user'].get('roles', []) %}
+                <label for="user_name">Restaurant name</label>
+                {% else %}
                 <label for="user_name">Name</label>
+                {% endif %}
                 <input class="pa-2" name="user_name" value="{{user.user_name}}" type="text" mix-check="{{ x.USER_NAME_REGEX }}">
             </div>
-            <div class="d-flex flex-col">
+            <div class="d-flex flex-col {% if 'restaurant' in session['user'].get('roles', []) %} d-none {% endif %}">
                 <label for="user_last_name">Last name</label>
                 <input class="pa-2" name="user_last_name" value="{{user.user_last_name}}" type="text" mix-check="{{ x.USER_LAST_NAME_REGEX }}">
             </div>
