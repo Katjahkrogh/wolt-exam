@@ -304,14 +304,29 @@ def view_restaurant_items(user_pk):
 @app.get("/profile")
 @x.no_cache
 def view_profile():
-    if not session.get("user", ""): 
-        return redirect(url_for("view_login"))
-    user = session.get("user")
-    print(user)
-    if len(user.get("roles", "")) > 1:
-        return redirect(url_for("view_choose_role"))
-    active_tab = request.args.get('tab', 'profile')
-    return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="Profile")
+    try:
+        if not session.get("user", ""): 
+            return redirect(url_for("view_login"))
+        user = session.get("user")
+        db, cursor = x.db()
+        cursor.execute("SELECT * FROM users WHERE user_pk = %s", (user['user_pk'],))
+        user = cursor.fetchone()
+
+        active_tab = request.args.get('tab', 'profile')
+        return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="Profile")
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
 
 ##############################
 @app.get("/partner")
@@ -886,34 +901,59 @@ def ______PUT_______(): pass
 ##############################
 ##############################
 
-@app.put("/users")
-def user_update():
+@app.put("/users/<user_pk>")
+def user_update(user_pk):
     try:
-        if not session.get("user"): x.raise_custom_exception("please login", 401)
+        user = session.get("user")
+        if not user:
+            x.raise_custom_exception("please login", 401)
+            return redirect(url_for("view_login"))
 
-        user_pk = session.get("user").get("user_pk")
+        user_pk = x.validate_uuid4(user_pk)
         user_name = x.validate_user_name()
         user_last_name = x.validate_user_last_name()
         user_email = x.validate_user_email()
+        user_address = x.validate_user_address()
+
+        db, cursor = x.db()
+        
+        # Fetch current user data from database
+        cursor.execute("SELECT user_name, user_last_name, user_email, user_address FROM users WHERE user_pk = %s", (user_pk,))
+        current_user = cursor.fetchone()
+
+        # Check if any field has actually changed
+        if (
+            current_user['user_name'] == user_name and 
+            current_user['user_last_name'] == user_last_name and 
+            current_user['user_email'] == user_email and 
+            current_user['user_address'] == user_address
+        ):
+            # No changes detected
+            toast = render_template("___toast.html", message="No changes were made")
+            return f"""<template mix-target="#toast">{toast}</template>""", 400
 
         user_updated_at = int(time.time())
 
-        db, cursor = x.db()
+        # Proceed with update if changes are detected
         q = """ UPDATE users
-                SET user_name = %s, user_last_name = %s, user_email = %s, user_updated_at = %s
+                SET user_name = %s, user_last_name = %s, user_address = %s, user_email = %s, user_updated_at = %s
                 WHERE user_pk = %s
             """
-        cursor.execute(q, (user_name, user_last_name, user_email, user_updated_at, user_pk))
-        if cursor.rowcount != 1: x.raise_custom_exception("cannot update user", 401)
+        cursor.execute(q, (user_name, user_last_name, user_address, user_email, user_updated_at, user_pk))
+
         db.commit()
-        return """<template>user updated</template>"""
+
+        return """<template mix-redirect="/profile"></template>"""
+
     except Exception as ex:
         ic(ex)
         if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code
+        if isinstance(ex, x.CustomException): 
+            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            if "users.user_email" in str(ex): return "<template>email not available</template>", 400
-            return "<template>System upgrating</template>", 500        
+            if "users.user_email" in str(ex): 
+                return "<template>email not available</template>", 400
+            return "<template>System upgrading</template>", 500        
         return "<template>System under maintenance</template>", 500    
     finally:
         if "cursor" in locals(): cursor.close()

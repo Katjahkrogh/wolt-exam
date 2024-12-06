@@ -1,5 +1,5 @@
 <h2>Edit your profile </h2>
-    <form id="updateItemForm" class="mb-20">
+    <form id="updateProfileForm" class="mb-20">
         <!-- <div class="d-flex flex-row j-content-center a-items-center gap-16">
             {% if 'restaurant' in session['user'].get('roles', []) %}
                 <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-28 h-28 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
@@ -10,21 +10,21 @@
         <div class="d-flex flex-col j-content-between gap-4">
             <div class="d-flex flex-col">
                 <label for="user_name">Name</label>
-                <input class="pa-2" name="user_name" type="text">
+                <input class="pa-2" name="user_name" value="{{user.user_name}}" type="text" mix-check="{{ x.USER_NAME_REGEX }}">
             </div>
             <div class="d-flex flex-col">
                 <label for="user_last_name">Last name</label>
-                <input class="pa-2" name="user_last_name" type="text">
+                <input class="pa-2" name="user_last_name" value="{{user.user_last_name}}" type="text" mix-check="{{ x.USER_LAST_NAME_REGEX }}">
             </div>
             <div class="d-flex flex-col">
                 <label for="user_email">Email</label>
-                <input class="pa-2" name="user_email" type="text">
+                <input class="pa-2" name="user_email" value="{{user.user_email}}" type="email" mix-check="{{ x.REGEX_EMAIL }}">
             </div>
             <div class="d-flex flex-col">
                 <label for="user_address">Address</label>
-                <input class="pa-2" name="user_address" type="text">
+                <input class="pa-2" name="user_address" value="{{user.user_address}}" type="text" mix-check="{{ x.USER_ADDRESS_REGEX }}">
             </div>
-            <button mix-put="{{ url_for('update_item', item_pk=item_pk) }}"  mix-data="#updateItemForm" class="w-100% mt-6"> 
+            <button mix-put="{{ url_for('user_update', user_pk=user.user_pk) }}" mix-data="#updateProfileForm" class="w-100% mt-6"> 
                 Save changes
             </button>
         </div>
