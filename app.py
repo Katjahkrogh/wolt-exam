@@ -933,10 +933,22 @@ def user_update(user_pk):
                 WHERE user_pk = %s
             """
         cursor.execute(q, (user_name, user_last_name, user_address, user_email, user_updated_at, user_pk))
-
         db.commit()
 
-        return """<template mix-redirect="/profile"></template>"""
+        # Fetch updated data for the user
+        cursor.execute("SELECT user_name, user_last_name, user_email, user_address FROM users WHERE user_pk = %s", (user_pk,))
+        updated_user = cursor.fetchone()
+
+        # Update the session user
+        session["user"].update({
+            "user_name": updated_user["user_name"],
+            "user_last_name": updated_user["user_last_name"],
+            "user_email": updated_user["user_email"],
+            "user_address": updated_user["user_address"],
+        })
+        session.modified = True
+
+        return """<template mix-redirect="/profile?tab=edit"></template>"""
 
     except Exception as ex:
         ic(ex)
