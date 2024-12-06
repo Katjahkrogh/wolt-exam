@@ -337,7 +337,8 @@ def view_partner():
     user = session.get("user")
     if len(user.get("roles", "")) > 1:
         return redirect(url_for("view_choose_role"))
-    return render_template("view_profile.html", user=user, x=x, title="partner")
+    active_tab = request.args.get('tab', 'profile') 
+    return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="partner")
 
 ##############################
 @app.get("/restaurant")
