@@ -1,5 +1,5 @@
 import random
-from flask import Flask, session, render_template, redirect, url_for, make_response, request, render_template_string
+from flask import Flask, session, render_template, redirect, url_for, make_response, request, render_template_string, jsonify
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 import x
@@ -285,7 +285,7 @@ def view_restaurant_items(user_pk):
         items = cursor.fetchall()
 
         # Render the template with the restaurant and its items
-        return render_template("view_restaurant_items.html", restaurant=restaurant, items=items)
+        return render_template("view_restaurant_items.html", user_pk=user_pk, restaurant=restaurant, items=items)
 
     except Exception as ex:
         ic(ex)
@@ -563,6 +563,22 @@ def view_search_results():
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
 
+
+# ##############################
+# @app.get("/cart")
+# def view_cart():
+#     user = session.get("user")
+#     if not user:
+#         return redirect(url_for("view_login"))
+    
+#     cart = session.get('cart', [])
+#     total_cart_value = sum(item['total_item_price'] for item in cart)
+
+#     return jsonify({
+#         "cart_items": cart,
+#         "total_value": total_cart_value
+#     }), 200
+
 ##############################
 ##############################
 ##############################
@@ -575,13 +591,10 @@ def ______POST______(): pass
 
 @app.post("/logout")
 def logout():
-    # ic("#"*30)
-    # ic(session)
     session.pop("user", None)
+    session.pop("cart", None)
+    session.modified = True
     # session.clear()
-    # session.modified = True
-    # ic("*"*30)
-    # ic(session)
     return redirect(url_for("view_login"))
 
 
@@ -882,6 +895,105 @@ def send_search_text():
     finally:
         pass    
 
+
+##############################
+@app.post("/add-to-cart")
+def add_to_cart():
+    try:
+        # Parse the incoming JSON data
+        data = request.get_json()
+        
+        if not data or "item_pk" not in data:
+            return jsonify({"error": "Invalid data. Must include item_pk."}), 400
+
+        item_pk = data["item_pk"]
+
+        # Fetch item details from the database
+        db, cursor = x.db()
+        q = """
+            SELECT 
+                item_pk, item_title, item_price, item_image
+            FROM items
+            WHERE item_pk = %s 
+        """
+        cursor.execute(q, (item_pk,))
+        item = cursor.fetchone()
+
+        if not item:
+            return jsonify({"error": "Item not found."}), 404
+
+        # Extract details from the database query
+        item_title = item["item_title"]
+        item_price = float(item["item_price"])
+        item_image = item["item_image"]
+
+        # Get the cart from the session or initialize it
+        cart = session.get("cart", [])
+
+        # Check if the item is already in the cart
+        for cart_item in cart:
+            if cart_item["item_pk"] == item_pk:
+                # Increase quantity and update total price
+                cart_item["quantity"] += 1
+                cart_item["total_item_price"] = cart_item["quantity"] * item_price
+                break
+        else:
+            # Add new item to the cart
+            cart.append({
+                "item_pk": item_pk,
+                "item_title": item_title,
+                "item_price": item_price,
+                "item_image": item_image,
+                "quantity": 1,
+                "total_item_price": item_price,
+            })
+
+        # Save updated cart back to the session
+        session["cart"] = cart
+        session.modified = True
+
+        # user_pk = request.view_args.get('user_pk')
+
+        # Redirect to the restaurant page after adding item to cart
+        return jsonify({"cart": cart, "message": f"{item_title} added to cart."}), 200
+        #return f"""<template mix-redirect="/restaurant/{restaurant_id}"></template>"""
+    
+    except x.mysql.connector.Error as e:
+        ic(e)
+        return jsonify({"error": "Database error occurred."}), 500
+        
+    except Exception as ex:
+        ic(ex)
+        return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500  
+    
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+##############################
+@app.post("/remove-from-cart/<item_id>")
+def remove_from_cart(item_id):
+    cart = session.get("cart", [])
+    
+    # Find the item in the cart
+    item = next((item for item in cart if item["item_pk"] == item_id), None)
+    
+    if item:
+        if item["quantity"] > 1:
+            # Decrease the quantity if it's higher than 1
+            item["quantity"] -= 1
+            item["total_item_price"] = item["quantity"] * item["item_price"]
+            session.modified = True
+            return {"success": True, "item_removed": False, "new_quantity": item["quantity"]}
+        else:
+            # Remove the item if the quantity is 1
+            cart = [cart_item for cart_item in cart if cart_item["item_pk"] != item_id]
+            session["cart"] = cart
+            session.modified = True
+            return {"success": True, "item_removed": True}
+    
+    return {"error": "Item not found in cart"}, 404
 
 
 ##############################

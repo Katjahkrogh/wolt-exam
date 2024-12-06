@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const addToCartBtns = document.querySelectorAll("[id^='addToCart-']");
     addToCartBtns.forEach((btn) => {
     btn.addEventListener("click", function () {
-        const itemId = this.id.split("-")[1]; // ikke split med - da det forkorte 
+        const itemId = this.id.split("-")[1]; 
         addToCart(itemId, this);
 
         // Close the modal containing the clicked button
