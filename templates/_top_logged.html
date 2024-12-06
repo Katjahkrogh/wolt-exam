@@ -30,7 +30,7 @@
                 >
                 <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="w-16 pt-2 max-w-16">
             </a>
-            <div class="d-flex flex-row a-items-center gap-2 ">
+            <div class="d-flex flex-row a-items-center gap-2 " i-sm="d-none">
                 <img src="{{ url_for('static', filename='img/location.svg') }}" alt="" class="w-5 h-5 max-w-5">
                 <p class="ma-0 pt-2 text-80">{{ session['user']['user_address'] }}</p>            
             </div>
@@ -38,9 +38,9 @@
         {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
         <section id="searchForm" class="d-none" md="d-block">
             <form id="frm_search">
-                <div class="p-relative d-flex a-items-center">
+                <div id="searchContainer" class="p-relative d-flex a-items-center" >
                     <img src="{{ url_for('static', filename='img/loop.svg') }}" alt="search" class="w-4 max-w-4 p-absolute left-(0.75rem) pointer-e-none">
-                    <input type="search" name="search" id="search" placeholder="Search on Volt..." class="bg-c-(#E4E4E4) h-(2.5rem) max-w-auto rounded-(1.25rem) text-(0.875rem) border-s-hidden pl-(2.2rem) box-s-border" md="w-72">
+                    <input type="search" name="search" id="search" placeholder="Search on Volt..." class="bg-c-grey3 h-(2.5rem) max-w-auto rounded-(1.25rem) text-(0.875rem) border-s-hidden pl-(2.2rem) box-s-border" md="w-100%" focus="placeholder-c-grey3">
                 </div>
                 <button mix-post="/get-results" mix-data="#frm_search" class="d-none"></button>
             </form>            

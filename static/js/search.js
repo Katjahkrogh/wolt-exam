@@ -3,6 +3,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const profileBtn = document.getElementById("profileBtn");
     const searchForm = document.getElementById("searchForm");
     const searchInput = document.getElementById("search");
+    const searchContainer = document.getElementById("searchContainer");
+
+    searchInput.addEventListener("click", () => {
+        searchContainer.classList.add("w-96")
+        searchInput.focus();
+    })
 
     // Show search field and hide button
     searchToggle.addEventListener("click", () => {
@@ -20,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
             searchForm.classList.add("d-none");
             searchForm.classList.remove("d-block");
             searchToggle.classList.remove("d-none");
+            searchContainer.classList.remove("w-96")
         }
     });
 });
