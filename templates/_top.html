@@ -13,7 +13,7 @@
 </head>
 <body class="w-full h-100vh text-c-gray:-16">
 <header class="mb-10">   
-    <nav class="d-flex flex-row j-content-between a-items-center border-b-1 border-c-lightGrey px-8 py-4" sm="mb-6" xl="px-16">
+    <nav class="d-flex flex-row j-content-between a-items-center px-8 py-4  border-b-1 border-c-grey2" sm="mb-6" xl="px-16">
         <div class="d-flex gap-5 a-items-baseline">
             <a href="{{ url_for('view_index')}}">
                 <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="w-16">
@@ -34,7 +34,7 @@
             </form>
         </section>
     </nav>
-    <nav class="d-flex j-content-start gap-6 my-2 px-8" sm="d-none">
+    <nav class="d-flex j-content-start gap-6 py-2 px-8  border-b-1 border-c-grey1" sm="d-none">
         <a href="{{ url_for('view_signup_partner')}}" class="text-c-black" hover="text-c-grey4">Volt partner</a>
         <a href="{{ url_for('view_signup_restaurant')}}" class="text-c-black" hover="text-c-grey4">restaurant</a>
     </nav>

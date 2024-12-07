@@ -1188,7 +1188,7 @@ def update_password(password_reset_key):
 
 
 ##############################
-@app.put("/users/<user_pk>")
+@app.put("/users/delete/<user_pk>")
 def user_soft_delete(user_pk):
     try:
         # Check if the user is logged in

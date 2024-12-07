@@ -1,6 +1,6 @@
-<dialog id="cartModal" class="p-relative h-fullvh w-500px p-self-end a-self-start rounded-l-6 pa-6" i-sm="w-100vw" i-md="w-60vw" i-lg="w-50vw">
-    <button class="light-btn rounded-full p-absolute top-4 right-8" id="cartClose" xl="right-16"  hover="bg-c-#D6EFFA">
-        <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
+<dialog id="cartModal" class="p-relative p-fixed h-100vh max-h-100vh w-500px p-self-end a-self-start rounded-l-6 pa-6" i-sm="w-100vw" i-md="w-60vw" i-lg="w-50vw">
+    <button class="light-btn rounded-full p-absolute top-4 right-6" id="cartClose"  hover="bg-c-#D6EFFA">
+        <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-3 p-self-center mt-2">
     </button>
 
     {% if session.get('cart') %}

@@ -27,4 +27,34 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     });
+
+
+
+     // Add event listener to all deleteItem btns
+    document.querySelectorAll('[id^="deleteItemButton-"]').forEach((button) => {
+        button.addEventListener("click", function () {
+            const itemId = button.id.replace("deleteItemButton-", "");
+            const modal = document.getElementById("deleteItemModal-" + itemId);
+
+            if (modal) {
+                modal.showModal();
+            } else {
+                console.error("Modal not found for itemId: " + itemId);
+            }
+        });
+    });
+
+     // Add event listener to all close buttons for delete modals
+    document.querySelectorAll('[id^="deleteModalClose-"]').forEach((button) => {
+        button.addEventListener("click", function () {
+            const itemId = button.id.replace("deleteModalClose-", "");
+            const modal = document.getElementById("deleteItemModal-" + itemId);
+
+            if (modal) {
+                modal.close();
+            } else {
+                console.error("Modal not found for itemId: " + itemId);
+            }
+        });
+    });
 });

@@ -12,10 +12,16 @@
         {{ title or "Volt" }}
     </title>
 </head>
+
 <body class="h-100vh text-c-gray:-16">
+
 <header class="mb-10">   
-    <nav class="d-flex flex-row j-content-between border-c-lightGrey px-8 py-4 mb-6" md="d-grid cols-3" xl="px-16">
-        <section class="d-flex flex-row gap-4 a-content-center">
+
+    <nav class="d-flex flex-row j-content-between border-c-lightGrey px-8 py-4 mb-6" 
+        md="{% if 'customer' in session['user'].get('roles', []) %} d-grid cols-3 {% else %} d-grid cols-2 {% endif %}"
+        xl="px-16">
+
+        <section class="d-flex flex-row gap-4 a-items-baseline ">
             <a href="{% if session.get('user') and 'admin' in session['user'].get('roles', []) %}
                     {{ url_for('view_admin') }}
                 {% elif session.get('user') and 'customer' in session['user'].get('roles', []) %}
@@ -31,37 +37,48 @@
                 <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="w-16 pt-2 max-w-16">
             </a>
             <div class="d-flex flex-row a-items-center gap-2 " i-sm="d-none">
-                <img src="{{ url_for('static', filename='img/location.svg') }}" alt="" class="w-5 h-5 max-w-5">
+                <img src="{{ url_for('static', filename='img/location.svg') }}" alt="" class="w-5 h-5 max-w-5 max-h-5">
                 <p class="ma-0 pt-2 text-80">{{ session['user']['user_address'] }}</p>            
             </div>
         </section>
+
         {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
-        <section id="searchForm" class="d-none" md="d-block p-self-center">
-            <form id="frm_search">
-                <div id="searchContainer" class="p-relative d-flex j-content-around a-items-center w-70" i-md="w-100%">
-                    <img src="{{ url_for('static', filename='img/loop.svg') }}" alt="search" class="w-4 max-w-4 p-absolute left-(0.75rem) pointer-e-none">
-                    <input type="search" name="search" id="search" placeholder="Search on Volt..." class="bg-c-grey2 h-(2.5rem) max-w-auto rounded-(1.25rem) text-(0.875rem) border-s-hidden pl-(2.2rem) box-s-border" md="w-100%" focus="placeholder-c-grey2">
-                </div>
-                <button mix-post="/get-results" mix-data="#frm_search" class="d-none"></button>
-            </form>            
-        </section>
+
+            <section id="searchForm" class="d-none" md="d-block p-self-center">
+                <form id="frm_search">
+                    <div id="searchContainer" class="p-relative d-flex j-content-around a-items-center w-70" i-md="w-100%">
+                        <img src="{{ url_for('static', filename='img/loop.svg') }}" alt="search" class="w-4 max-w-4 p-absolute left-(0.75rem) pointer-e-none">
+                        <input type="search" name="search" id="search" placeholder="Search on Volt..." class="bg-c-grey2 h-(2.5rem) max-w-auto rounded-(1.25rem) text-(0.875rem) border-s-hidden pl-(2.2rem) box-s-border" md="w-100%" focus="placeholder-c-grey2">
+                    </div>
+                    <button mix-post="/get-results" mix-data="#frm_search" class="d-none"></button>
+                </form>            
+            </section>
+            
+
         {% endif %}
+    
         <section class="d-flex gap-2 j-self-end">
+
             {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
-            <button id="searchToggle" class="d-block px-3 rounded-full d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer" md="d-none">
-                <img src="{{ url_for('static', filename='img/loop.svg') }}" alt="search" class="w-4 pt-1">
-            </button>
+
+                <button id="searchToggle" class="d-block px-3 rounded-full d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer" md="d-none">
+                    <img src="{{ url_for('static', filename='img/loop.svg') }}" alt="search" class="w-4 pt-1">
+                </button>
+
             {% endif %}
+
             <form id="profileBtn" method="GET" action="{{url_for('view_profile')}}" class="d-block">
                 <button class="profile-btn text-90" hover="bg-c-grey3 cursor-pointer"> 
                     {% if 'restaurant' in session['user'].get('roles', []) %}
-                    <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-8 h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
+                        <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-8 h-8 obj-f-cover max-w-100% rounded-full shadow-md " alt="profile picture">
                     {% else %}
-                        <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
+                        <img src="{{ url_for('static', filename='avatars/' + session['user'].get('user_avatar')) }}" class="w-8 h-8 obj-f-cover max-w-100% rounded-full shadow-md " alt="profile picture">
                     {% endif %}
+
                     Profile
                 </button>
             </form>
+
             {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
             
                 <button id="cart" class="p-relative rounded-full px-3 d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer"> 
@@ -74,9 +91,11 @@
         </section>
 
     </nav>
+
     {% if request.endpoint not in ['view_restaurant_items', 'view_profile'] %}
         {% include "__tabs.html" %}
     {% endif %}
+
 </header>
 
     <div id="toast" class="d-flex flex-col j-content-center p-fixed w-full top-4 z-10"></div>

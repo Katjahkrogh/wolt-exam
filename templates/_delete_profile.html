@@ -10,11 +10,11 @@
             <form id="deleteAccountForm" class="d-flex flex-col j-content-between gap-5">
                 <div class="d-flex flex-col">
                     <label for="entered_password" class="d-flex">
-                        <span> Password</span>
+                        Password
                     </label>
-                    <input name="entered_password" type="text" id="delete-{{ user['user_pk'] }}">
+                    <input name="entered_password" type="password" id="delete-{{ user['user_pk'] }}">
                 </div>
-                <button mix-put="/users/{{ user['user_pk'] }}"  mix-data="#deleteAccountForm" mix-default="Delete my account"
+                <button mix-put="/users/delete/{{ user['user_pk'] }}"  mix-data="#deleteAccountForm" mix-default="Delete my account"
                 mix-await="Deleting.." class="bg-c-red:+2 w-100%" hover="bg-c-red:+8">Delete my account</button>
             </form>
         </div>

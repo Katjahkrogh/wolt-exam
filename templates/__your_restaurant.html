@@ -29,9 +29,10 @@
                 <div>
                     <img src="{{ url_for('static', filename='dishes/' + (item['item_image'] or 'dish_1.jpg')) }}" 
                         alt="{{ item.item_title }}" class="w-full h-250px obj-f-cover rounded-t-6 p-relative" xl="h-300px"/>
-                    <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose-{{ item['item_pk'] }}"  hover="bg-c-#D6EFFA">
-                        <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
-                    </button> 
+                    <button class="light-btn w-10 h-10 pa-3 rounded-full p-absolute top-10 right-10" id="modalClose-{{ item['item_pk'] }}"  hover="bg-c-#D6EFFA">
+                        <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="close" class="p-self-center">
+                    </button>
+                    
                     <div class=" d-flex flex-col j-content-between pa-6">
                         <h3>{{ item["item_title"] }}</h3>
                         <p class="text-c-primary">DKK {{ item["item_price"] }}</p>
@@ -44,14 +45,16 @@
                             </button>
                         </form>
 
-                            <button id="modalOpen" class="bg-c-red:+2 w-50%" hover="bg-c-red:+8">
+                            <button id="deleteItemButton-{{ item['item_pk'] }}" class="bg-c-red:+2 w-50%" hover="bg-c-red:+8">
                                 Delete item
                             </button>
 
-                            <dialog id="modal" class="p-relative max-w-400px p-self-center rounded-6 pa-10" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
-                                <button class="light-btn rounded-full p-absolute top-10 right-10" id="modalClose"  hover="bg-c-#D6EFFA">
-                                    <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="" class="w-4 p-self-center mt-2">
-                                </button>
+                            <dialog id="deleteItemModal-{{ item['item_pk'] }}" class="p-relative max-w-400px p-self-center rounded-6 pa-10" i-sm="w-80vw" i-md="w-60vw" i-lg="w-50vw">
+
+                            <button class="light-btn w-10 h-10 pa-3 rounded-full p-absolute top-10 right-10" id="deleteModalClose-{{ item['item_pk'] }}"  hover="bg-c-#D6EFFA">
+                                <img src="{{ url_for('static', filename='img/exit.svg') }}" alt="close" class="p-self-center">
+                            </button>
+                            
                                 <div class="pa-6 d-flex flex-col j-content-between gap-10">
                                     <h3 class="mb-0">Sure you want to delete item: "{{ item["item_title"] }}"</h3>
                                     <form id="deleteItemForm" class="d-flex flex-col j-content-between gap-5">                                        

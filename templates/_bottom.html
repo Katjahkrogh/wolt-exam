@@ -15,11 +15,11 @@
     <script src="{{url_for('static', filename='js/map.js')}}"></script>
 {% endif %}
 
-{% if request.endpoint == 'view_restaurant_items' or 'view_restaurant' %}
+{% if request.endpoint == 'view_restaurant_items' or 'view_restaurant' and active_tab == 'your_restaurant' %}
     <script src="{{url_for('static', filename='js/item.js')}}"></script>
 {% endif %}
 
-{% if request.endpoint == 'view_login' or 'view_profile' and active_tab == 'delete' or 'view_restaurant' and active_tab == 'your_restaurant' %}
+{% if request.endpoint == 'view_login' or 'view_profile' and active_tab == 'delete' %}
     <script src="{{url_for('static', filename='js/modal.js')}}"></script>
 {% endif %}
 
