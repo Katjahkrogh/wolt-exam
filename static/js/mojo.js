@@ -8,6 +8,7 @@ mojo({
                 grey2: "#EDEEEE",
                 grey3: "#E4E4E4",
                 grey4: "#717173",
+                voltBlack: "#141414",
                 
             }
         },
@@ -16,8 +17,12 @@ mojo({
         },
     },
     patterns: {
+            "body":{
+                idle : "h-full d-flex flex-col",
+            }
+            ,
             "main": {
-                idle : "mx-8 text-c-black",
+                idle : "mx-8 text-c-voltBlack flex-(1)",
                 xl : "mx-16"
             },
             "input": {

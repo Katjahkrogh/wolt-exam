@@ -152,9 +152,11 @@ def view_customer():
                 users.user_avatar,
                 roles.role_name
             FROM users
-            LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
-            LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
-            WHERE roles.role_name = 'restaurant';
+            JOIN users_roles 
+            ON users.user_pk = users_roles.user_role_user_fk
+            JOIN roles 
+            ON users_roles.user_role_role_fk = roles.role_pk
+            WHERE roles.role_name = 'restaurant' AND users.user_blocked_at = 0 AND users.user_deleted_at = 0;
         """
         cursor.execute(q)
         restaurants = cursor.fetchall()  # Fetch all restaurants
@@ -196,7 +198,7 @@ def get_restaurants():
             FROM users
             JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
             JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
-            WHERE roles.role_name = 'restaurant';
+            WHERE roles.role_name = 'restaurant' AND users.user_blocked_at = 0 AND users.user_deleted_at = 0
         """
         cursor.execute(q)
         restaurants = cursor.fetchall()
@@ -261,8 +263,10 @@ def view_restaurant_items(user_pk):
                 users.user_avatar,
                 roles.role_name
             FROM users
-            LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
-            LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+            JOIN users_roles 
+            ON users.user_pk = users_roles.user_role_user_fk
+            JOIN roles 
+            ON users_roles.user_role_role_fk = roles.role_pk
             WHERE users.user_pk = %s AND roles.role_name = 'restaurant'
         """
         cursor.execute(q, (user_pk,))
@@ -365,7 +369,7 @@ def view_restaurant():
                 FROM users
                 JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
                 JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
-                WHERE users.user_pk = %s
+                WHERE users.user_pk = %s AND users.user_blocked_at = 0 AND users.user_deleted_at = 0
             """
         cursor.execute(q, (user_pk,))
         users = cursor.fetchall()
@@ -465,10 +469,13 @@ def view_admin():
                 users.user_address,
                 users.user_email,
                 users.user_blocked_at,
+                users.user_deleted_at,
                 roles.role_name
                 FROM users
-                LEFT JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
-                LEFT JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+                JOIN users_roles 
+                ON users.user_pk = users_roles.user_role_user_fk
+                JOIN roles 
+                ON users_roles.user_role_role_fk = roles.role_pk
                 ORDER BY roles.role_name ASC, users.user_name ASC
             """
         cursor.execute(q)
@@ -482,9 +489,11 @@ def view_admin():
             items.item_price,
             items.item_image,
             items.item_blocked_at,
+            items.item_deleted_at,
             users.user_name
         FROM items
-        LEFT JOIN users ON items.item_user_fk = users.user_pk
+        JOIN users 
+        ON items.item_user_fk = users.user_pk
         ORDER BY users.user_name ASC, items.item_title ASC
         """
         cursor.execute(q)
@@ -533,7 +542,7 @@ def view_search_results():
                 ON user_pk = user_role_user_fk
                 JOIN roles
                 ON role_pk = user_role_role_fk
-                WHERE role_name = "restaurant" AND user_name LIKE %s AND user_deleted_at = 0
+                WHERE role_name = "restaurant" AND user_name LIKE %s AND user_deleted_at = 0 AND user_blocked_at = 0
             """
         cursor.execute(q, (f"%{search_text}%", ))
         restaurant_results = cursor.fetchall()
@@ -856,18 +865,17 @@ def create_item():
         cursor.execute(q, (item_pk, item_user_fk, item_title, item_price, item_image_name, item_created_at, item_deleted_at, item_blocked_at, item_updated_at))
         db.commit()
 
-        # Success response
-        toast = render_template("___toast.html", message="Item added successfully!")
-        return f"""<template mix-target="#toast" mix-bottom>{toast}</template>"""
+        return f"""<template mix-redirect="/restaurant"></template>"""
     
     except x.CustomException as ex:
+        ic(ex)
         if "db" in locals(): db.rollback()
-        toast = render_template("___toast.html", message=ex.message)
-        return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
-    
-    except Exception as ex:
-        if "db" in locals(): db.rollback()
-        return "<template>System under maintenance</template>", 500
+        if isinstance(ex, x.CustomException): 
+            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>Database error</template>", 500        
+        return "<template>System under maintenance</template>", 500  
     
     finally:
         if "cursor" in locals(): cursor.close()
@@ -1060,7 +1068,8 @@ def user_update(user_pk):
         })
         session.modified = True
 
-        return """<template mix-redirect="/profile?tab=edit"></template>"""
+        toast = render_template("___toast_success.html", message="Profile updated successfully!")
+        return f"""<template mix-target="#toast" mix-bottom>{toast}</template>"""
 
     except Exception as ex:
         ic(ex)
@@ -1260,7 +1269,7 @@ def block_user(user_pk):
 
         db.commit()
 
-        toast = render_template("___toast.html", message="User blocked")
+        toast = render_template("___toast_success.html", message="User blocked")
         return f"""
                 <template mix-target="#block-{user_pk}"
                 mix-replace>{btn_unblock}
@@ -1324,7 +1333,7 @@ def unblock_user(user_pk):
         x.send_email(user["user_email"], subject, body)
         db.commit()
 
-        toast = render_template("___toast.html", message="User unblocked")
+        toast = render_template("___toast_success.html", message="User unblocked")
         return f"""
                 <template 
                 mix-target='#unblock-{user_pk}'
@@ -1429,7 +1438,7 @@ def item_soft_delete(item_pk):
 
         db.commit()
 
-        return """<template mix-redirect="/restaurant?message=Item+deleted"></template>"""
+        return """<template mix-redirect="/restaurant"></template>"""
 
     except Exception as ex:
         ic(ex)
@@ -1488,7 +1497,8 @@ def block_item(item_pk):
                 users.user_name, 
                 users.user_email 
                 FROM items 
-                LEFT JOIN users ON items.item_user_fk = users.user_pk WHERE items.item_pk = %s
+                JOIN users 
+                ON items.item_user_fk = users.user_pk WHERE items.item_pk = %s
                 """
         cursor.execute(q, (item_pk,))
         item = cursor.fetchone()
@@ -1508,7 +1518,7 @@ def block_item(item_pk):
 
         db.commit()
 
-        toast = render_template("___toast.html", message="item blocked")
+        toast = render_template("___toast_success.html", message="item blocked")
         return f"""
                 <template 
                 mix-target='#block-{item_pk}' 
@@ -1563,7 +1573,8 @@ def unblock_item(item_pk):
                 users.user_name, 
                 users.user_email 
                 FROM items 
-                LEFT JOIN users ON items.item_user_fk = users.user_pk WHERE items.item_pk = %s
+                JOIN users 
+                ON items.item_user_fk = users.user_pk WHERE items.item_pk = %s
                 """
         cursor.execute(q, (item_pk,))
         item = cursor.fetchone()
@@ -1583,7 +1594,7 @@ def unblock_item(item_pk):
 
         db.commit()
 
-        toast = render_template("___toast.html", message="Item unblocked")
+        toast = render_template("___toast_success.html", message="Item unblocked")
         return f"""
                 <template 
                 mix-target='#unblock-{item_pk}'

@@ -11,24 +11,26 @@
             </div>
             <div id="users">
                 {% for item in items %}
-                <div id="u{{ user['user_pk'] }}" class="d-flex px-2 a-content-center p-content-center bg-c-charocoal:-9"
-                    odd="bg-c-charocoal:-5">
-                    <div class="py-1 pl-4 flex-1 text-c-body:-6 text-sm a-content-center">
-                        {{ item["user_name"] }}
-                    </div>
-                    <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
-                        {{ item["item_title"] }}
-                    </div>
-                    <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
-                        {{ item["item_price"] }} kr.
-                    </div>
-                    <div class="py-1 pl-6 flex-1 d-flex p-content-end">
-                        {% if item["item_blocked_at"] == 0 %}
-                            {% include "___btn_block_item.html" %}
-                        {% else %}
-                            {% include "___btn_unblock_item.html" %}
-                        {% endif %}
-                    </div>
+                    {% if item["item_deleted_at"] == 0 %}
+                    <div id="u{{ user['user_pk'] }}" class="d-flex px-2 a-content-center p-content-center bg-c-charocoal:-9"
+                        odd="bg-c-charocoal:-5">
+                        <div class="py-1 pl-4 flex-1 text-c-body:-6 text-sm a-content-center">
+                            {{ item["user_name"] }}
+                        </div>
+                        <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
+                            {{ item["item_title"] }}
+                        </div>
+                        <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
+                            {{ item["item_price"] }} kr.
+                        </div>
+                        <div class="py-1 pl-6 flex-1 d-flex p-content-end">
+                            {% if item["item_blocked_at"] == 0 %}
+                                {% include "___btn_block_item.html" %}
+                            {% else %}
+                                {% include "___btn_unblock_item.html" %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
