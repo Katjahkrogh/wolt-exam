@@ -38,7 +38,7 @@
         {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
         <section id="searchForm" class="d-none" md="d-block p-self-center">
             <form id="frm_search">
-                <div id="searchContainer" class="p-relative d-flex j-content-around a-items-center w-70">
+                <div id="searchContainer" class="p-relative d-flex j-content-around a-items-center w-70" i-md="w-100%">
                     <img src="{{ url_for('static', filename='img/loop.svg') }}" alt="search" class="w-4 max-w-4 p-absolute left-(0.75rem) pointer-e-none">
                     <input type="search" name="search" id="search" placeholder="Search on Volt..." class="bg-c-grey2 h-(2.5rem) max-w-auto rounded-(1.25rem) text-(0.875rem) border-s-hidden pl-(2.2rem) box-s-border" md="w-100%" focus="placeholder-c-grey2">
                 </div>
@@ -72,6 +72,7 @@
             
             {% endif %}
         </section>
+
     </nav>
     {% if request.endpoint not in ['view_restaurant_items', 'view_profile'] %}
         {% include "__tabs.html" %}
