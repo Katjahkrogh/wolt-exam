@@ -7,7 +7,6 @@
 
     <div class="pt-10">
         <h2 class="mb-8 text-w-black">Your order</h2>
-        <article>
                 <div id="cartItems" class="d-flex flex-col gap-6">
                     {% for item in session.get('cart')%}
                     <div id="cartItem" class="d-flex flex-row j-content-between a-items-center">
@@ -29,11 +28,23 @@
                     </div>
                     {% endfor %}
                 </div>
-        </article>
-        <button class="mt-10 w-full">Order now</button>
-    </div>
+        </div>
+
+    {% else %}
+
+    <div class="pt-10">
+    <h2 class="mb-8 text-w-black">Your order</h2>
+        <div id="cartItems" class="d-flex flex-col gap-6">
+            <div class="d-flex flex-col j-content-center a-items-center gap-6">
+                <img src="/static/img/emptyCart.svg" alt="empty cart" class="w-50 h-100%">
+                <h2>Your cart is empty</h2>
+            </div>
+        </div>
 
     {% endif %}
 
-
+    <form id="checkoutForm">
+        <button mix-post="/checkout" mix-data="#checkoutForm" mix-default="Order now"
+    mix-await="Placing order.." id="orderBtn" class="mt-10 w-full d-none">Order now</button>
+    </form>
 </dialog>

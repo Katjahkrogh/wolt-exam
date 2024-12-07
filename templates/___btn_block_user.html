@@ -3,7 +3,9 @@
         class="bg-c-red:-10 border-1 border-c-charocoal text-c-body px-3 py-1 rounded-sm mr-2 h-10 cursor-pointer"
         id="block-{{ user['user_pk'] }}"
         mix-put="/users/block/{{ user['user_pk'] }}"
-        mix-data="#frm_user_block">
+        mix-data="#frm_user_block"
+        mix-default="Block"
+        mix-await="Blocking..">
         Block
     </button>
 </form>

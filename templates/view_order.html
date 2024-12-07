@@ -1,0 +1,31 @@
+{% include "_top_logged.html" %}
+
+<main class="mx-8" xl="mx-16">
+
+    <h1>Thank you for your order</h1>
+
+    {% if success_message %}
+        <p>{{ success_message }}</p>
+    {% endif %}
+
+    <h2>Order Summary</h2>
+    <p>Total Amount: DKK {{ total_value }}</p>
+
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Price</th>
+        </tr>
+        {% for item in cart_items %}
+            <tr>
+                <td>{{ item.item_title }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>DKK {{ item.total_item_price }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+</main>
+
+{% include "_bottom.html" %}

@@ -576,20 +576,31 @@ def view_search_results():
         if "db" in locals(): db.close()
 
 
-# ##############################
-# @app.get("/cart")
-# def view_cart():
-#     user = session.get("user")
-#     if not user:
-#         return redirect(url_for("view_login"))
-    
-#     cart = session.get('cart', [])
-#     total_cart_value = sum(item['total_item_price'] for item in cart)
 
-#     return jsonify({
-#         "cart_items": cart,
-#         "total_value": total_cart_value
-#     }), 200
+##############################
+@app.get("/cart-total")
+def get_cart_total():
+    cart = session.get("cart", [])
+    total_items = sum(item["quantity"] for item in cart)
+    return jsonify({"total_items": total_items})
+
+##############################
+@app.get("/order")
+def view_order():
+# Retrieve the last order from the session
+    last_order = session.get('last_order', {})
+    
+    # Clear the last order from the session after retrieving
+    session.pop('last_order', None)
+    session.modified = True
+    
+    return render_template(
+        "view_order.html", 
+        success_message="Your order has been placed. Confirmation email sent.",
+        total_value=last_order.get('total_value', 0),
+        cart_items=last_order.get('cart_items', [])
+    )
+
 
 ##############################
 ##############################
@@ -963,11 +974,8 @@ def add_to_cart():
         session["cart"] = cart
         session.modified = True
 
-        # user_pk = request.view_args.get('user_pk')
-
         # Redirect to the restaurant page after adding item to cart
         return jsonify({"cart": cart, "message": f"{item_title} added to cart."}), 200
-        #return f"""<template mix-redirect="/restaurant/{restaurant_id}"></template>"""
     
     except x.mysql.connector.Error as e:
         ic(e)
@@ -983,28 +991,70 @@ def add_to_cart():
 
 
 ##############################
-@app.post("/remove-from-cart/<item_id>")
-def remove_from_cart(item_id):
+@app.post("/remove-from-cart/<item_pk>")
+def remove_from_cart(item_pk):
     cart = session.get("cart", [])
-    
+
     # Find the item in the cart
-    item = next((item for item in cart if item["item_pk"] == item_id), None)
-    
+    item = next((item for item in cart if item["item_pk"] == item_pk), None)
+
     if item:
         if item["quantity"] > 1:
             # Decrease the quantity if it's higher than 1
             item["quantity"] -= 1
             item["total_item_price"] = item["quantity"] * item["item_price"]
-            session.modified = True
-            return {"success": True, "item_removed": False, "new_quantity": item["quantity"]}
         else:
             # Remove the item if the quantity is 1
-            cart = [cart_item for cart_item in cart if cart_item["item_pk"] != item_id]
-            session["cart"] = cart
-            session.modified = True
-            return {"success": True, "item_removed": True}
+            cart = [cart_item for cart_item in cart if cart_item["item_pk"] != item_pk]
+            
+        session["cart"] = cart  
+        session.modified = True
+
+        return jsonify({
+            "success": True,
+            "cart": cart
+        })
+
+    return jsonify({"error": "Item not found in cart"}), 404
+
+
+##############################
+@app.post("/checkout")    
+def checkout_cart():
+
+    cart = session.get('cart', [])
     
-    return {"error": "Item not found in cart"}, 404
+    if not cart:
+        return jsonify({"error": "Cart is empty"}), 400
+    
+    total_value = sum(item['total_item_price'] for item in cart)
+
+    user_email = session.get("user").get("user_email")
+
+    subject = f"Order Confirmation - Total: DKK {total_value:.2f}"
+    body = "<h2>Your Order Details:</h2>"
+    body += "<table border='1'><tr><th>Item</th><th>Quantity</th><th>Price</th></tr>"
+    
+    for item in cart:
+        body += f"<tr><td>{item['item_title']}</td><td>{item['quantity']}</td><td>DKK {item['total_item_price']:.2f}</td></tr>"
+    
+    body += f"<tr><td colspan='2'>Total</td><td>DKK {total_value:.2f}</td></tr></table>"
+    
+    # Send the email
+    x.send_email(user_email, subject, body)
+        
+    # Store the order details in the session before clearing the cart
+    session['last_order'] = {
+        'cart_items': cart,
+        'total_value': total_value
+    }
+    
+    # Clear the cart after checkout
+    session['cart'] = []
+    session.modified = True
+
+    return """<template mix-redirect="/order"></template>"""
+#redirect(url_for('view_order'))
 
 
 ##############################

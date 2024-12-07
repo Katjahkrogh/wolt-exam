@@ -43,7 +43,8 @@
                     </label>
                     <input name="user_email" type="text" id="reset_user_email" mix-check="{{ x.REGEX_EMAIL }}">
                 </div>
-                <button mix-post="/reset-password" mix-data="#resetPasswordForm">Reset password</button>
+                <button mix-post="/reset-password" mix-data="#resetPasswordForm" mix-default="Reset password"
+                mix-await="Loading..">Reset password</button>
             </form>
         </div>
     </dialog>
