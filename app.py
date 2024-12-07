@@ -288,8 +288,11 @@ def view_restaurant_items(user_pk):
         cursor.execute(q, (user_pk,))
         items = cursor.fetchall()
 
+        # Get the referrer URL for the back btn otherwise stay on page if it cant get the url
+        referrer_url = request.referrer if request.referrer else url_for('view_restaurant_items', user_pk=user_pk)
+
         # Render the template with the restaurant and its items
-        return render_template("view_restaurant_items.html", user_pk=user_pk, restaurant=restaurant, items=items)
+        return render_template("view_restaurant_items.html", user_pk=user_pk, restaurant=restaurant, items=items, referrer_url=referrer_url)
 
     except Exception as ex:
         ic(ex)
