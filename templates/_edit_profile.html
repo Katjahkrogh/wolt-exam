@@ -21,7 +21,8 @@
                 <label for="user_address">Address</label>
                 <input class="pa-2" name="user_address" value="{{user.user_address}}" type="text" mix-check="{{ x.USER_ADDRESS_REGEX }}">
             </div>
-            <button mix-put="{{ url_for('user_update', user_pk=user.user_pk) }}" mix-data="#updateProfileForm" class="w-100% mt-6"> 
+            <button mix-put="{{ url_for('user_update', user_pk=user.user_pk) }}" mix-data="#updateProfileForm" mix-default="Save changes"
+                mix-await="Saving.." class="w-100% mt-6"> 
                 Save changes
             </button>
         </div>

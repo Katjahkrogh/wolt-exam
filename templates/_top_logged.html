@@ -66,7 +66,7 @@
             
                 <button id="cart" class="p-relative rounded-full px-3 d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer"> 
                     <img src="{{ url_for('static', filename='img/basket.svg') }}" alt="basket" class="w-4">
-                    <span id="cartNumber" class="p-absolute -top-2 -right-2 rounded-full bg-c-primary text-color-white text-90 px-2 pb-1 pt-5px text-lh-4">0</span>
+                    <span id="cartNumber" class="d-none p-absolute -top-2 -right-2 rounded-full bg-c-primary text-color-white text-90 px-2 pb-1 pt-5px text-lh-4">0</span>
                 </button>
                 {% include "___cart.html" %}
             

@@ -45,7 +45,8 @@
             <input name="user_password" type="text" mix-check="{{ x.REGEX_USER_PASSWORD }}">
         </div>        
 
-        <button mix-post="/users/partner" mix-data="#frm_user_signup">
+        <button mix-post="/users/partner" mix-data="#frm_user_signup" mix-default="Signup"
+                mix-await="Signing up..">
             Signup
         </button>
 

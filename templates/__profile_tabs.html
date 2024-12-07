@@ -2,7 +2,6 @@
 {% if 'customer' in session['user'].get('roles', []) or 'partner' in session['user'].get('roles', []) or 'restaurant' in session['user'].get('roles', []) %}
     <!-- Tabs for all users expcept admin-->
     <section class="d-flex j-content-start flex-row a-items-center gap-10 border-b-2 border-c-grey3 mb-10" i-sm="flex-col a-items-start border-b-0 gap-2">
-            
             <a href="{{ url_for('view_profile', tab='profile') }}" class="tab_secondary-btn {% if active_tab == 'profile' %}active_secondary{% endif %}"
                 i-sm="w-full border-b-2 border-c-grey3"  data-tab="profile"> 
                 <p>Profile information</p>
