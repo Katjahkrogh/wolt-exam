@@ -9,14 +9,13 @@
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
     <script src="https://unpkg.com/mojocss"></script>
     <title>
-        {{ title or "Company" }}
+        {{ title or "Volt" }}
     </title>
-    <title>Document</title>
 </head>
 <body class="h-100vh text-c-gray:-16">
 <header class="mb-10">   
-    <nav class="d-flex flex-row j-content-between a-items-center border-b-1 border-c-lightGrey px-8 py-4 mb-6" xl="px-16">
-        <div class="d-flex flex-row gap-4 a-content-center">
+    <nav class="d-grid cols-2 border-b-1 border-c-lightGrey px-8 py-4 mb-6" md="cols-3" xl="px-16">
+        <section class="d-flex flex-row gap-4 a-content-center">
             <a href="{% if session.get('user') and 'admin' in session['user'].get('roles', []) %}
                     {{ url_for('view_admin') }}
                 {% elif session.get('user') and 'customer' in session['user'].get('roles', []) %}
@@ -35,7 +34,7 @@
                 <img src="{{ url_for('static', filename='img/location.svg') }}" alt="" class="w-5 h-5 max-w-5">
                 <p class="ma-0 pt-2 text-80">{{ session['user']['user_address'] }}</p>            
             </div>
-        </div>
+        </section>
         {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
         <section id="searchForm" class="d-none" md="d-block">
             <form id="frm_search">
@@ -47,14 +46,14 @@
             </form>            
         </section>
         {% endif %}
-        <section class="d-flex gap-2">
+        <section class="d-flex gap-2 j-self-end">
             {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
             <button id="searchToggle" class="d-block px-3 rounded-full d-flex j-content-center a-items-center bg-c-grey2" hover="bg-c-grey3 cursor-pointer" md="d-none">
                 <img src="{{ url_for('static', filename='img/loop.svg') }}" alt="search" class="w-4 pt-1">
             </button>
             {% endif %}
             <form id="profileBtn" method="GET" action="{{url_for('view_profile')}}" class="d-block">
-                <button class="profile-btn" hover="bg-c-grey3 cursor-pointer"> 
+                <button class="profile-btn text-90" hover="bg-c-grey3 cursor-pointer"> 
                     {% if 'restaurant' in session['user'].get('roles', []) %}
                     <img src="{{ url_for('static', filename='dishes/' + session['user'].get('user_avatar')) }}" class="w-8 h-8 obj-f-cover max-w-100% rounded-full shadow-lg " alt="profile picture">
                     {% else %}
