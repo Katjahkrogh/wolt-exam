@@ -2,7 +2,7 @@
 <footer class="bg-c-voltBlack w-full px-16 mt-26 pt-20 p-relative bottom-0" i-sm="px-8">
     <img src="{{url_for('static', filename='img/logo-light.svg')}}" alt="logo" class="w-16 pt-2 max-w-16 pb-40">
     <div class="d-flex j-content-end a-items-end">
-        <p class="text-c-secondary pb-10">&copy; <span>KEA - Volt eksamen 2024</span></p>
+        <p class="text-c-secondary pb-10">&copy; <span>KEA - Web Development Exam 2024</span></p>
     </div>
 </footer>
 
@@ -26,10 +26,6 @@
 {% if session.get('user') and 'customer' in session['user'].get('roles', []) %}
 <script src="{{url_for('static', filename='js/search.js')}}"></script>
 {% endif %}
-
-<!-- {% if request.endpoint == 'view_restaurant_items' %}
-    <script src="{{url_for('static', filename='js/cart.js')}}"></script>
-{% endif %} -->
 
 </body>
 </html>

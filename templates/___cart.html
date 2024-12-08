@@ -7,28 +7,35 @@
 
     <div class="pt-10">
         <h2 class="mb-8 text-w-black">Your order</h2>
-                <div id="cartItems" class="d-flex flex-col gap-6">
-                    {% for item in session.get('cart')%}
-                    <div id="cartItem" class="d-flex flex-row j-content-between a-items-center">
-                        <div class="d-flex gap-4 j-content-start a-items-start">
-                            <img src="{{ url_for('static', filename='dishes/' + item.item_image) }}" alt="{{ item.item_title }}" class="h-12 w-22 obj-f-cover rounded-sm">
-                            <div class="d-flex flex-col j-content-center">
-                                <h3 class="ma-0">{{item.item_title}}</h3>
-                                <p class="text-c-primary ma-0">DKK {{item.total_item_price}}</p>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-4 a-items-center">
-                            {% if item.quantity > 1 %}
-                                <p id="quantity" class="text-100 text-w-semibold mt-3" lg="text-120">x {{item.quantity}}</p>
-                            {% endif %}
-                            <button id="remove-{{item.item_pk}}" class="rounded-full bg-c-grey2" hover="bg-c-grey3">
-                                <img src="/static/img/trash.svg" class="w-4 h-100%"></img>
-                            </button>
-                        </div>
+        <div id="cartItems" class="d-flex flex-col gap-6">
+            {% for item in session.get('cart')%}
+            <div id="cartItem" class="d-flex flex-row j-content-between a-items-center">
+                <div class="d-flex gap-4 j-content-start a-items-start">
+                    <img src="{{ url_for('static', filename='dishes/' + item.item_image) }}" alt="{{ item.item_title }}" class="h-12 w-22 obj-f-cover rounded-sm">
+                    <div class="d-flex flex-col j-content-center">
+                        <h3 class="ma-0">{{item.item_title}}</h3>
+                        <p class="text-c-primary ma-0">DKK {{item.total_item_price}}</p>
                     </div>
-                    {% endfor %}
                 </div>
+                <div class="d-flex gap-4 a-items-center">
+                    {% if item.quantity > 1 %}
+                        <p id="quantity" class="text-100 text-w-semibold mt-3" lg="text-120">x {{item.quantity}}</p>
+                    {% endif %}
+                    <button id="remove-{{item.item_pk}}" class="rounded-full bg-c-grey2" hover="bg-c-grey3">
+                        <img src="/static/img/trash.svg" class="w-4 h-100%"></img>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
         </div>
+    </div>
+
+    <form id="checkoutForm">
+        <button mix-post="/checkout" mix-data="#checkoutForm" mix-default="Order now"
+        mix-await="Placing order.." id="orderBtn" class="mt-10 w-full">
+        Place order now
+        </button>
+    </form>
 
     {% else %}
 
@@ -40,13 +47,14 @@
                 <h2>Your cart is empty</h2>
             </div>
         </div>
+    
+        <form id="checkoutForm">
+        <button mix-post="/checkout" mix-data="#checkoutForm" mix-default="Order now"
+        mix-await="Placing order.." id="orderBtn" class="mt-10 w-full d-none">
+        Place order now
+        </button>
+    </form>    
 
     {% endif %}
 
-    <form id="checkoutForm">
-        <button mix-post="/checkout" mix-data="#checkoutForm" mix-default="Order now"
-        mix-await="Placing order.." id="orderBtn" class="mt-10 w-full">
-        Place order now
-    </button>
-    </form>
 </dialog>

@@ -19,8 +19,7 @@ mojo({
     patterns: {
             "body":{
                 idle : "h-full d-flex flex-col",
-            }
-            ,
+            },
             "main": {
                 idle : "mx-8 text-c-voltBlack flex-(1)",
                 xl : "mx-16"
@@ -75,6 +74,10 @@ mojo({
         {
             name: "active_secondary",
             pattern: "border-b-3 border-c-black",
+        },
+        {
+            name: "active_secondary_sm",
+            pattern: "text-w-semibold",
         },
         {
             name: "bg-customer-hero",

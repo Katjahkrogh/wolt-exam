@@ -30,25 +30,25 @@ def ______GET______(): pass
 
 
 
-##############################
-@app.get("/test-set-redis")
-def view_test_set_redis():
-    redis_host = "redis"
-    redis_port = 6379
-    redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)    
-    redis_client.set("name", "Santiago", ex=10)
-    # name = redis_client.get("name")
-    return "name saved"
+# ##############################
+# @app.get("/test-set-redis")
+# def view_test_set_redis():
+#     redis_host = "redis"
+#     redis_port = 6379
+#     redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)    
+#     redis_client.set("name", "Santiago", ex=10)
+#     # name = redis_client.get("name")
+#     return "name saved"
 
 
-@app.get("/test-get-redis")
-def view_test_get_redis():
-    redis_host = "redis"
-    redis_port = 6379
-    redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)    
-    name = redis_client.get("name")
-    if not name: name = "no name"
-    return name
+# @app.get("/test-get-redis")
+# def view_test_get_redis():
+#     redis_host = "redis"
+#     redis_port = 6379
+#     redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)    
+#     name = redis_client.get("name")
+#     if not name: name = "no name"
+#     return name
 
 
 ##############################
@@ -611,14 +611,6 @@ def ______POST______(): pass
 ##############################
 ##############################
 
-@app.post("/logout")
-def logout():
-    session.pop("user", None)
-    session.pop("cart", None)
-    session.modified = True
-    # session.clear()
-    return redirect(url_for("view_login"))
-
 
 ##############################
 @app.post("/users/<role>")
@@ -791,6 +783,18 @@ def login():
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
 
+
+##############################
+@app.post("/logout")
+def logout():
+    session.pop("user", None)
+    session.pop("cart", None)
+    session.modified = True
+    # session.clear()
+    return redirect(url_for("view_login"))
+
+
+
 ##############################
 @app.post("/reset-password")
 def reset_password():
@@ -840,14 +844,16 @@ def reset_password():
         ic(ex)
         if "db" in locals(): db.rollback()
         if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>Database error</template>", 500        
-        return "<template>System under maintenance</template>", 500  
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
+
 
 ##############################
 @app.post("/items")
@@ -880,19 +886,21 @@ def create_item():
 
         return f"""<template mix-redirect="/restaurant"></template>"""
     
-    except x.CustomException as ex:
+    except Exception as ex:
         ic(ex)
         if "db" in locals(): db.rollback()
         if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
         if isinstance(ex, x.mysql.connector.Error):
             ic(ex)
-            return "<template>Database error</template>", 500        
-        return "<template>System under maintenance</template>", 500  
-    
+            return f"""<template mix-target="#toast" mix-bottom>System upgrading</template>""", 500        
+        return f"""<template mix-target="#toast" mix-bottom>System under maintenance</template>""", 500    
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
+
 
 ##############################
 @app.post("/get-results")
@@ -904,6 +912,7 @@ def send_search_text():
             toast = render_template("___toast", message="Missing search text")
             return f"""<template mix-target="#toast" mix-bottom>{toast}</template>"""
         return f"""<template mix-redirect="/search-results?search={text}"></template>"""
+    
     except Exception as ex:
         ic(ex)
         if isinstance(ex, x.CustomException): 
@@ -976,14 +985,15 @@ def add_to_cart():
         # Redirect to the restaurant page after adding item to cart
         return jsonify({"cart": cart, "message": f"{item_title} added to cart."}), 200
     
-    except x.mysql.connector.Error as e:
-        ic(e)
-        return jsonify({"error": "Database error occurred."}), 500
-        
     except Exception as ex:
         ic(ex)
-        return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500  
-    
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            return f"""<template mix-target="#toast" mix-bottom>System upgrading</template>""", 500        
+        return f"""<template mix-target="#toast" mix-bottom>System under maintenance</template>""", 500    
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
@@ -992,94 +1002,117 @@ def add_to_cart():
 ##############################
 @app.post("/remove-from-cart/<item_pk>")
 def remove_from_cart(item_pk):
-    cart = session.get("cart", [])
+    try:
+        cart = session.get("cart", [])
 
-    # Find the item in the cart
-    item = next((item for item in cart if item["item_pk"] == item_pk), None)
+        # Find the item in the cart
+        item = next((item for item in cart if item["item_pk"] == item_pk), None)
 
-    if item:
-        if item["quantity"] > 1:
-            # Decrease the quantity if it's higher than 1
-            item["quantity"] -= 1
-            item["total_item_price"] = item["quantity"] * item["item_price"]
-        else:
-            # Remove the item if the quantity is 1
-            cart = [cart_item for cart_item in cart if cart_item["item_pk"] != item_pk]
-            
-        session["cart"] = cart  
-        session.modified = True
+        if item:
+            if item["quantity"] > 1:
+                # Decrease the quantity if it's higher than 1
+                item["quantity"] -= 1
+                item["total_item_price"] = item["quantity"] * item["item_price"]
+            else:
+                # Remove the item if the quantity is 1
+                cart = [cart_item for cart_item in cart if cart_item["item_pk"] != item_pk]
+                
+            session["cart"] = cart  
+            session.modified = True
 
-        return jsonify({
-            "success": True,
-            "cart": cart
-        })
+            return jsonify({
+                "success": True,
+                "cart": cart
+            })
 
-    return jsonify({"error": "Item not found in cart"}), 404
+        return jsonify({"error": "Item not found in cart"}), 404
+    
+    except Exception as ex:
+            ic(ex)
+            if isinstance(ex, x.CustomException): 
+                toast = render_template("___toast.html", message=ex.message)
+                return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+            if isinstance(ex, x.mysql.connector.Error):
+                ic(ex)
+                return "<template>System upgrating</template>", 500        
+            return "<template>System under maintenance</template>", 500  
+    finally:
+            pass    
 
 
 ##############################
 @app.post("/checkout")    
 def checkout_cart():
-
-    cart = session.get('cart', [])
-    
-    if not cart:
-        return jsonify({"error": "Cart is empty"}), 400
-    
-    total_value = sum(item['total_item_price'] for item in cart)
-
-    user_email = session.get("user").get("user_email")
-
-    subject = f"Order Confirmation - Total: DKK {total_value:.2f}"
-    body = """
-            <h2>Your Order Details:</h2>
-            <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
-                <thead>
-                    <tr>
-                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Item</th>
-                        <th style="text-align: center; padding: 8px; border-bottom: 2px solid #ddd;">Quantity</th>
-                        <th style="text-align: right; padding: 8px; border-bottom: 2px solid #ddd;">Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-            """
-    
-    for item in cart:
-        body += f"""
-        <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">{item['item_title']}</td>
-            <td style="text-align: center; padding: 8px; border-bottom: 1px solid #ddd;">{item['quantity']}</td>
-            <td style="text-align: right; padding: 8px; border-bottom: 1px solid #ddd;">DKK {item['total_item_price']:.2f}</td>
-        </tr>
-    """
-
-    body += f"""
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="2" style="text-align: right; padding: 8px; font-weight: bold; border-top: 2px solid #ddd;">Total:</td>
-                <td style="text-align: right; padding: 8px; font-weight: bold; border-top: 2px solid #ddd;">DKK {total_value:.2f}</td>
-            </tr>
-        </tfoot>
-    </table>
-    """
-    
-    # Send the email
-    x.send_email(user_email, subject, body)
+    try:
+        cart = session.get('cart', [])
         
-    # Store the order details in the session before clearing the cart
-    session['last_order'] = {
-        'cart_items': cart,
-        'total_value': total_value
-    }
-    
-    # Clear the cart after checkout
-    session['cart'] = []
-    session.modified = True
+        if not cart:
+            return jsonify({"error": "Cart is empty"}), 400
+        
+        total_value = sum(item['total_item_price'] for item in cart)
 
-    return """<template mix-redirect="/order"></template>"""
-#redirect(url_for('view_order'))
+        user_email = session.get("user").get("user_email")
 
+        subject = f"Order Confirmation - Total: DKK {total_value:.2f}"
+        body = """
+                <h2>Your Order Details:</h2>
+                <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Item</th>
+                            <th style="text-align: center; padding: 8px; border-bottom: 2px solid #ddd;">Quantity</th>
+                            <th style="text-align: right; padding: 8px; border-bottom: 2px solid #ddd;">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                """
+        
+        for item in cart:
+            body += f"""
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">{item['item_title']}</td>
+                <td style="text-align: center; padding: 8px; border-bottom: 1px solid #ddd;">{item['quantity']}</td>
+                <td style="text-align: right; padding: 8px; border-bottom: 1px solid #ddd;">DKK {item['total_item_price']:.2f}</td>
+            </tr>
+        """
+
+        body += f"""
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="text-align: right; padding: 8px; font-weight: bold; border-top: 2px solid #ddd;">Total:</td>
+                    <td style="text-align: right; padding: 8px; font-weight: bold; border-top: 2px solid #ddd;">DKK {total_value:.2f}</td>
+                </tr>
+            </tfoot>
+        </table>
+        """
+        
+        # Send the email
+        x.send_email(user_email, subject, body)
+            
+        # Store the order details in the session before clearing the cart
+        session['last_order'] = {
+            'cart_items': cart,
+            'total_value': total_value
+        }
+        
+        # Clear the cart after checkout
+        session['cart'] = []
+        session.modified = True
+
+        return """<template mix-redirect="/order"></template>"""
+
+    except Exception as ex:
+                ic(ex)
+                if isinstance(ex, x.CustomException): 
+                    toast = render_template("___toast.html", message=ex.message)
+                    return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+                if isinstance(ex, x.mysql.connector.Error):
+                    ic(ex)
+                    return "<template>System upgrating</template>", 500        
+                return "<template>System under maintenance</template>", 500  
+    finally:
+            pass    
 
 ##############################
 ##############################
@@ -1152,10 +1185,9 @@ def user_update(user_pk):
         ic(ex)
         if "db" in locals(): db.rollback()
         if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            if "users.user_email" in str(ex): 
-                return "<template>email not available</template>", 400
             return "<template>System upgrading</template>", 500        
         return "<template>System under maintenance</template>", 500    
     finally:
@@ -1200,15 +1232,15 @@ def update_password(password_reset_key):
     except Exception as ex:
         ic(ex)
         if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): return ex.message, ex.code    
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "Database under maintenance", 500        
-        return "System under maintenance", 500  
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
     finally:
         if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()    
-
+        if "db" in locals(): db.close()
 
 
 ##############################
@@ -1274,35 +1306,20 @@ def user_soft_delete(user_pk):
 
         # Log the user out
         session.clear()
-
-        # return  f"""<template mix-target="#modal">User is deleted</template>"""
-        # Redirect to the index page
         return """<template mix-redirect="/"></template>"""
 
     except Exception as ex:
         ic(ex)
-
-        # Rollback in case of database error
-        if "db" in locals():
-            db.rollback()
-
-        # Handle custom exceptions
-        if isinstance(ex, x.CustomException):
-            return f"""<template mix-target="#toast">{ex.message}</template>""", ex.code
-
-        # Handle database errors
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            return "<template>Database error</template>", 500        
-
-        # Handle unexpected errors
-        return "<template>System under maintenance</template>", 500  
-
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
     finally:
-        # Close database resources
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
 
 
 ##############################
@@ -1360,11 +1377,11 @@ def block_user(user_pk):
         ic(ex)
         if "db" in locals(): db.rollback()
         if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>Database error</template>", 500        
-        return "<template>System under maintenance</template>", 500  
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
@@ -1427,7 +1444,8 @@ def unblock_user(user_pk):
         ic(ex)
         if "db" in locals(): db.rollback()
         if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code        
         if isinstance(ex, x.mysql.connector.Error):
             ic(ex)
             return "<template>Database error</template>", 500        
@@ -1482,14 +1500,19 @@ def update_item(item_pk):
         
         return """<template mix-redirect='/restaurant'></template>""", 200
 
-    except Exception as e:
-        ic(e)
-        if "db" in locals(): db.rollback()
-        return "<p>System under maintenance. Please try again later.</p>", 500
-
+    except Exception as ex:
+            ic(ex)
+            if "db" in locals(): db.rollback()
+            if isinstance(ex, x.CustomException): 
+                toast = render_template("___toast.html", message=ex.message)
+                return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+            if isinstance(ex, x.mysql.connector.Error):
+                ic(ex)
+                return "<template>System upgrating</template>", 500        
+            return "<template>System under maintenance</template>", 500  
     finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
+            if "cursor" in locals(): cursor.close()
+            if "db" in locals(): db.close()
 
 
 ##############################
@@ -1519,30 +1542,17 @@ def item_soft_delete(item_pk):
 
     except Exception as ex:
         ic(ex)
-
-        # Rollback in case of database error
-        if "db" in locals():
-            db.rollback()
-
-        # Handle custom exceptions
-        if isinstance(ex, x.CustomException):
-            return f"""<template mix-target="#toast">{ex.message}</template>""", ex.code
-
-        # Handle database errors
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            return "<template>Database error</template>", 500        
-
-        # Handle unexpected errors
-        return "<template>System under maintenance</template>", 500  
-
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
     finally:
-        # Close database resources
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
 
-############# IS THIS THE ONE EXCEPT BLAH BLAH WE SHOULD USE MAYBE ? ^^^^^
 
 
 ##############################
@@ -1611,11 +1621,11 @@ def block_item(item_pk):
         ic(ex)
         if "db" in locals(): db.rollback()
         if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>Database error</template>", 500        
-        return "<template>System under maintenance</template>", 500  
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
@@ -1684,16 +1694,14 @@ def unblock_item(item_pk):
                 """
         
     except Exception as ex:
-
         ic(ex)
         if "db" in locals(): db.rollback()
         if isinstance(ex, x.CustomException): 
-            return f"""<template mix-target="#toast" mix-bottom>{ex.message}</template>""", ex.code        
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>Database error</template>", 500        
-        return "<template>System under maintenance</template>", 500  
-    
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
@@ -1738,21 +1746,24 @@ def verify_user(verification_key):
                 SET user_verified_at = %s 
                 WHERE user_verification_key = %s"""
         cursor.execute(q, (user_verified_at, verification_key))
+
         if cursor.rowcount != 1: x.raise_custom_exception("cannot verify account", 400)
+        
         db.commit()
-        return redirect(url_for("view_login", message="User verified, please login"))
+
+        return redirect(url_for("view_login", message="User verified, please login"))   
 
     except Exception as ex:
         ic(ex)
         if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): return ex.message, ex.code    
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
         if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "Database under maintenance", 500        
-        return "System under maintenance", 500  
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
     finally:
         if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()    
-
+        if "db" in locals(): db.close()
 
 

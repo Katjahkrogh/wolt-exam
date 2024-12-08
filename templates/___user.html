@@ -1,14 +1,14 @@
-<div id="u{{ user['user_pk'] }}" class="d-flex px-2 a-content-center p-content-center bg-c-charocoal:-9" odd="bg-c-charocoal:-5">
-    <div class="py-1 pl-4 flex-1 text-c-body:-6 text-sm a-content-center">
+<div id="u{{ user['user_pk'] }}" class="d-flex px-2 a-items-center p-content-start bg-c-grey3" odd="bg-c-grey2">
+    <div class="py-1 pl-4 flex-1 text-c-black text-sm j-content-start">
         {{ user["user_name"] }}
     </div>
-    <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
+    <div class="py-1 pl-2 flex-1 text-c-black text-sm j-content-start">
         {{ user["user_email"] }}
     </div>
-    <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center" i-sm="d-none">
+    <div class="py-1 pl-4 flex-1 text-c-black text-sm j-content-start" i-sm="d-none">
         {{ user["role_name"] }}
     </div>
-    <div class="py-1 pl-6 flex-1 d-flex p-content-end">
+    <div class="py-1 pl-4 flex-1 d-flex j-content-end">
         {% if user["user_blocked_at"] == 0 %}
             {% include "___btn_block_user.html" %}
         {% else %}

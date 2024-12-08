@@ -3,24 +3,23 @@
     <div class="rounded-sm overflow-hidden">
         <div class="d-flex flex-col">
             <div
-                class="d-flex py-4 a-content-center p-content-center bg-c-charocoal:+3 text-c-body border-b-1 border-c-charocoal:+5">
-                <div class="px-6 flex-1 text-w-medium">Restaurant</div>
-                <div class="px-6 flex-1 text-w-medium">Item title</div>
-                <div class="px-6 flex-1 text-w-medium">Item price</div>
-                <div class="px-6 flex-1 text-w-medium"></div>
+                class="d-flex py-4 a-content-center p-content-center bg-c-grey3 text-c-black">
+                <div class="pl-6 flex-1 text-w-semibold">Restaurant</div>
+                <div class="pl-4 flex-1 text-w-semibold">Item title</div>
+                <div class="pl-4 flex-1 text-w-semibold">Item price</div>
+                <div class="px-4 flex-1 text-w-medium"></div>
             </div>
             <div id="users">
                 {% for item in items %}
                     {% if item["item_deleted_at"] == 0 %}
-                    <div id="u{{ user['user_pk'] }}" class="d-flex px-2 a-content-center p-content-center bg-c-charocoal:-9"
-                        odd="bg-c-charocoal:-5">
-                        <div class="py-1 pl-4 flex-1 text-c-body:-6 text-sm a-content-center">
+                    <div id="u{{ user['user_pk'] }}"  class="d-flex px-2 a-items-center p-content-start bg-c-grey3" odd="bg-c-grey2">
+                        <div class="py-1 pl-4 flex-1 text-c-black text-sm a-content-center">
                             {{ item["user_name"] }}
                         </div>
-                        <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
+                        <div class="py-1 pl-6 flex-1 text-c-black text-sm a-content-center">
                             {{ item["item_title"] }}
                         </div>
-                        <div class="py-1 pl-6 flex-1 text-c-body:-6 text-sm a-content-center">
+                        <div class="py-1 pl-6 flex-1 text-c-black text-sm a-content-center">
                             {{ item["item_price"] }} kr.
                         </div>
                         <div class="py-1 pl-6 flex-1 d-flex p-content-end">

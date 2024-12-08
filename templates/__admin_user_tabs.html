@@ -1,17 +1,17 @@
 {% if 'admin' in session['user'].get('roles', []) %}
-    <!-- Tabs for all users expcept admin-->
+    <!-- Tabs for admin users -->
     <section class="d-flex j-content-start flex-row a-items-center gap-10 border-b-2 border-c-grey3 mb-10" i-sm="flex-col a-items-start border-b-0 gap-2">
             
             <a href="{{ url_for('view_admin', tab='users', secondary_tab='Customers') }}" class="tab_secondary-btn {% if active_secondary_tab == 'Customers' %}active_secondary{% endif %}"
-                i-sm="w-full border-b-2 border-c-grey3"  data-tab="Customers"> 
+                i-sm="w-full border-b-2 border-c-grey3 tab_secondary-btn {% if active_secondary_tab == 'Customers' %} active_secondary_sm {% endif %}"  data-tab="Customers"> 
                 <p>Customers</p>
             </a>
             <a href="{{ url_for('view_admin', tab='users', secondary_tab='Restaurants') }}" class="tab_secondary-btn {% if active_secondary_tab == 'Restaurants' %}active_secondary{% endif %}"
-                i-sm="w-full border-b-2 border-c-grey3"  data-tab="Restaurants"> 
+                i-sm="w-full border-b-2 border-c-grey3 tab_secondary-btn {% if active_secondary_tab == 'Restaurants' %} active_secondary_sm {% endif %}"  data-tab="Restaurants"> 
                 <p>Restaurants</p>
             </a>
             <a href="{{ url_for('view_admin', tab='users', secondary_tab='Partners') }}" class="tab_secondary-btn {% if active_secondary_tab == 'Partners' %}active_secondary{% endif %}"
-                i-sm="w-full border-b-2 border-c-grey3"  data-tab="Partners"> 
+                i-sm="w-full border-b-2 border-c-grey3 tab_secondary-btn {% if active_secondary_tab == 'Partners' %} active_secondary_sm {% endif %}"  data-tab="Partners"> 
                 <p>Partners</p>
             </a>
     </section>  
