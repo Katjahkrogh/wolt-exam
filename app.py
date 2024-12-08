@@ -1217,14 +1217,19 @@ def update_item(item_pk):
         
         return """<template mix-redirect='/restaurant'></template>""", 200
 
-    except Exception as e:
-        ic(e)
-        if "db" in locals(): db.rollback()
-        return "<p>System under maintenance. Please try again later.</p>", 500
-
+    except Exception as ex:
+            ic(ex)
+            if "db" in locals(): db.rollback()
+            if isinstance(ex, x.CustomException): 
+                toast = render_template("___toast.html", message=ex.message)
+                return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+            if isinstance(ex, x.mysql.connector.Error):
+                ic(ex)
+                return "<template>System upgrating</template>", 500        
+            return "<template>System under maintenance</template>", 500  
     finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
+            if "cursor" in locals(): cursor.close()
+            if "db" in locals(): db.close()
 
 
 ##############################
@@ -1526,6 +1531,46 @@ def unblock_user(user_pk):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
+
+##############################
+@app.put("/items/delete/<item_pk>")
+def item_soft_delete(item_pk):
+    try:
+        # Check if the user is logged in
+        user_session = session.get("user", None)
+        if not user_session:
+            return redirect(url_for("view_login"))
+        
+        # Validate UUID
+        item_pk = x.validate_uuid4(item_pk)
+
+        item_deleted_at = int(time.time())
+
+        # Database connection and update
+        db, cursor = x.db()
+        q = 'UPDATE items SET item_deleted_at = %s WHERE item_pk = %s'
+        cursor.execute(q, (item_deleted_at, item_pk))
+        if cursor.rowcount != 1:
+            x.raise_custom_exception("Cannot delete item", 400)
+
+        db.commit()
+
+        return """<template mix-redirect="/restaurant"></template>"""
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code
+        if isinstance(ex, x.mysql.connector.Error):
+            return "<template>System upgrading</template>", 500        
+        return "<template>System under maintenance</template>", 500    
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
 
 
 ##############################
