@@ -79,7 +79,7 @@ USER_NAME_MIN = 2
 USER_NAME_MAX = 20
 USER_NAME_REGEX = f"^.{{{USER_NAME_MIN},{USER_NAME_MAX}}}$"
 def validate_user_name():
-    error = f"Name {USER_NAME_MIN} to {USER_NAME_MAX} characters"
+    error = f"Name must be {USER_NAME_MIN} to {USER_NAME_MAX} characters"
     user_name = request.form.get("user_name", "").strip()
     if not re.match(USER_NAME_REGEX, user_name): raise_custom_exception(error, 400)
     return user_name
@@ -89,7 +89,7 @@ USER_LAST_NAME_MIN = 2
 USER_LAST_NAME_MAX = 20
 USER_LAST_NAME_REGEX = f"^.{{{USER_LAST_NAME_MIN},{USER_LAST_NAME_MAX}}}$"
 def validate_user_last_name():
-    error = f"Last name {USER_LAST_NAME_MIN} to {USER_LAST_NAME_MAX} characters"
+    error = f"Last name must be {USER_LAST_NAME_MIN} to {USER_LAST_NAME_MAX} characters"
     user_last_name = request.form.get("user_last_name", "").strip() 
     if not re.match(USER_LAST_NAME_REGEX, user_last_name): raise_custom_exception(error, 400)
     return user_last_name
@@ -103,7 +103,7 @@ def validate_user_address():
 
     # Check min and max lenght
     if not (USER_ADDRESS_MIN <= len(user_address) <= USER_ADDRESS_MAX):
-        raise_custom_exception("Address must be 2 and 50 characters.", 400)
+        raise_custom_exception("Address must contain both letters and a number", 400)
 
     # Validate against the regex 
     if not re.match(USER_ADDRESS_REGEX, user_address):
@@ -125,7 +125,7 @@ USER_PASSWORD_MIN = 8
 USER_PASSWORD_MAX = 50
 REGEX_USER_PASSWORD = f"^.{{{USER_PASSWORD_MIN},{USER_PASSWORD_MAX}}}$"
 def validate_user_password():
-    error = f"Password {USER_PASSWORD_MIN} to {USER_PASSWORD_MAX} characters"
+    error = f"Password must be {USER_PASSWORD_MIN} to {USER_PASSWORD_MAX} characters"
     user_password = request.form.get("user_password", "").strip()
     if not re.match(REGEX_USER_PASSWORD, user_password): raise_custom_exception(error, 400)
     return user_password
