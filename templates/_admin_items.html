@@ -11,7 +11,6 @@
             </div>
             <div id="users">
                 {% for item in items %}
-                    {% if item["item_deleted_at"] == 0 %}
                     <div id="u{{ user['user_pk'] }}"  class="d-flex px-2 a-items-center p-content-start bg-c-grey3" odd="bg-c-grey2">
                         <div class="py-1 pl-4 flex-1 text-c-black text-sm a-content-center">
                     <div id="u{{ user['user_pk'] }}" class="d-flex px-2 a-content-center p-content-center bg-c-charocoal:-9"
@@ -32,7 +31,7 @@
                                 {% include "___btn_unblock_item.html" %}
                             {% endif %}
                         </div>
-                </div>
+                    </div>
                 {% endfor %}
             </div>
         </div>
