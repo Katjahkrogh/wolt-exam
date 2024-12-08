@@ -411,6 +411,8 @@ def view_edit_items(item_pk):
     try:
         db, cursor = x.db()
 
+        item_pk = x.validate_uuid4(item_pk)
+
         # Fetch the item info
         q = """
             SELECT 
@@ -431,13 +433,17 @@ def view_edit_items(item_pk):
     
     except Exception as ex:
         ic(ex)
-        return "<p>Error occurred</p>", 500
-
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
     finally:
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
 
 
 ##############################
@@ -504,7 +510,10 @@ def view_admin():
         ic(ex)
         if "db" in locals():
             db.rollback()
-        return "An error occurred", 500
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
 
     finally:
         if "cursor" in locals():
@@ -543,10 +552,7 @@ def view_search_results():
     
     except Exception as ex:
         ic(ex)
-        if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): 
-            toast = render_template("___toast.html", message=ex.message)
-            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if "db" in locals(): db.rollback()  
         if isinstance(ex, x.mysql.connector.Error):
             ic(ex)
             return "<template>System upgrating</template>", 500        
@@ -1202,7 +1208,7 @@ def update_item(item_pk):
 
         item_updated_at = int(time.time())
 
-        # Database update
+        # Connect to database
         db, cursor = x.db()
 
         q = """
@@ -1211,11 +1217,6 @@ def update_item(item_pk):
         WHERE item_pk = %s
         """
         cursor.execute(q, (item_title, item_price, item_image_name, item_updated_at, item_pk))
-
-        # Check for changes
-        if cursor.rowcount == 0:
-            toast = render_template("___toast.html", message="No changes made")
-            return f"""<template mix-target="#toast">{toast}</template>""", 400
 
         db.commit()
         
