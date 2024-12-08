@@ -12,7 +12,6 @@
             </div>
             <div id="users">
                 {% for user in users %}
-                    {% if user["user_deleted_at"] == 0 %}
                         {% if user["role_name"] != "admin" %}
                             {% if active_secondary_tab == 'Customers' and user["role_name"] == "customer" %}
                                 {% include "___user.html" %}
@@ -25,7 +24,6 @@
                                 
                             {% endif %}
                         {% endif %}
-                    {% endif %}
                 {% endfor %}
             </div>
         </div>
