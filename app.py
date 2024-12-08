@@ -469,6 +469,7 @@ def view_admin():
                 ON users.user_pk = users_roles.user_role_user_fk
                 JOIN roles 
                 ON users_roles.user_role_role_fk = roles.role_pk
+                WHERE user_deleted_at = 0
                 ORDER BY roles.role_name ASC, users.user_name ASC
             """
         cursor.execute(q)
@@ -487,6 +488,7 @@ def view_admin():
         FROM items
         JOIN users 
         ON items.item_user_fk = users.user_pk
+        WHERE item_deleted_at = 0
         ORDER BY users.user_name ASC, items.item_title ASC
         """
         cursor.execute(q)
@@ -1114,6 +1116,60 @@ def user_update(user_pk):
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
 
+##############################
+@app.put("/items/<item_pk>")
+def update_item(item_pk):
+    try:
+        print(f"Item PK: {item_pk}")
+        # Ensure the user is logged in
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))
+
+        item_title = x.validate_item_title()
+        item_price = x.validate_item_price()
+        
+        # Check if a new image is uploaded, otherwise keep current
+        file = request.files.get("item_image", None)
+        if file and file.filename != "":
+            # Validate and save the new image if present
+            file, item_image_name = x.validate_item_image()
+            os.makedirs(x.UPLOAD_ITEM_FOLDER, exist_ok=True)
+            file.save(os.path.join(x.UPLOAD_ITEM_FOLDER, item_image_name))
+        else:
+            # Keep the current image name if no new file is uploaded
+            item_image_name = request.form.get("existing_item_image", None)  # Make sure this is sent in the form
+
+        item_updated_at = int(time.time())
+
+        # Database update
+        db, cursor = x.db()
+
+        q = """
+        UPDATE items
+        SET item_title = %s, item_price = %s, item_image = %s, item_updated_at = %s
+        WHERE item_pk = %s
+        """
+        cursor.execute(q, (item_title, item_price, item_image_name, item_updated_at, item_pk))
+
+        # Check for changes
+        if cursor.rowcount == 0:
+            toast = render_template("___toast.html", message="No changes made")
+            return f"""<template mix-target="#toast">{toast}</template>""", 400
+
+        db.commit()
+        
+        return """<template mix-redirect='/restaurant'></template>""", 200
+
+    except Exception as e:
+        ic(e)
+        if "db" in locals(): db.rollback()
+        return "<p>System under maintenance. Please try again later.</p>", 500
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
 
 ##############################
 @app.post("/update-password/<password_reset_key>")
@@ -1256,6 +1312,58 @@ def user_soft_delete(user_pk):
         if "db" in locals():
             db.close()
 
+##############################
+@app.put("/items/delete/<item_pk>")
+def item_soft_delete(item_pk):
+    try:
+        # Check if the user is logged in
+        user_session = session.get("user", None)
+        if not user_session:
+            return redirect(url_for("view_login"))
+        
+        # Validate UUID
+        item_pk = x.validate_uuid4(item_pk)
+
+        item_deleted_at = int(time.time())
+
+        # Database connection and update
+        db, cursor = x.db()
+        q = 'UPDATE items SET item_deleted_at = %s WHERE item_pk = %s'
+        cursor.execute(q, (item_deleted_at, item_pk))
+        if cursor.rowcount != 1:
+            x.raise_custom_exception("Cannot delete item", 400)
+
+        db.commit()
+
+        return """<template mix-redirect="/restaurant"></template>"""
+
+    except Exception as ex:
+        ic(ex)
+
+        # Rollback in case of database error
+        if "db" in locals():
+            db.rollback()
+
+        # Handle custom exceptions
+        if isinstance(ex, x.CustomException):
+            return f"""<template mix-target="#toast">{ex.message}</template>""", ex.code
+
+        # Handle database errors
+        if isinstance(ex, x.mysql.connector.Error):
+            return "<template>Database error</template>", 500        
+
+        # Handle unexpected errors
+        return "<template>System under maintenance</template>", 500  
+
+    finally:
+        # Close database resources
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
+
+############# IS THIS THE ONE EXCEPT BLAH BLAH WE SHOULD USE MAYBE ? ^^^^^
+
 
 ##############################
 @app.put("/users/block/<user_pk>")
@@ -1388,113 +1496,6 @@ def unblock_user(user_pk):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
-
-##############################
-@app.put("/items/<item_pk>")
-def update_item(item_pk):
-    try:
-        print(f"Item PK: {item_pk}")
-        # Ensure the user is logged in
-        user = session.get("user")
-        if not user:
-            return redirect(url_for("view_login"))
-
-        item_title = x.validate_item_title()
-        item_price = x.validate_item_price()
-        
-        # Check if a new image is uploaded, otherwise keep current
-        file = request.files.get("item_image", None)
-        if file and file.filename != "":
-            # Validate and save the new image if present
-            file, item_image_name = x.validate_item_image()
-            os.makedirs(x.UPLOAD_ITEM_FOLDER, exist_ok=True)
-            file.save(os.path.join(x.UPLOAD_ITEM_FOLDER, item_image_name))
-        else:
-            # Keep the current image name if no new file is uploaded
-            item_image_name = request.form.get("existing_item_image", None)  # Make sure this is sent in the form
-
-        item_updated_at = int(time.time())
-
-        # Database update
-        db, cursor = x.db()
-
-        q = """
-        UPDATE items
-        SET item_title = %s, item_price = %s, item_image = %s, item_updated_at = %s
-        WHERE item_pk = %s
-        """
-        cursor.execute(q, (item_title, item_price, item_image_name, item_updated_at, item_pk))
-
-        # Check for changes
-        if cursor.rowcount == 0:
-            toast = render_template("___toast.html", message="No changes made")
-            return f"""<template mix-target="#toast">{toast}</template>""", 400
-
-        db.commit()
-        
-        return """<template mix-redirect='/restaurant'></template>""", 200
-
-    except Exception as e:
-        ic(e)
-        if "db" in locals(): db.rollback()
-        return "<p>System under maintenance. Please try again later.</p>", 500
-
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-
-##############################
-@app.put("/items/delete/<item_pk>")
-def item_soft_delete(item_pk):
-    try:
-        # Check if the user is logged in
-        user_session = session.get("user", None)
-        if not user_session:
-            return redirect(url_for("view_login"))
-        
-        # Validate UUID
-        item_pk = x.validate_uuid4(item_pk)
-
-        item_deleted_at = int(time.time())
-
-        # Database connection and update
-        db, cursor = x.db()
-        q = 'UPDATE items SET item_deleted_at = %s WHERE item_pk = %s'
-        cursor.execute(q, (item_deleted_at, item_pk))
-        if cursor.rowcount != 1:
-            x.raise_custom_exception("Cannot delete item", 400)
-
-        db.commit()
-
-        return """<template mix-redirect="/restaurant"></template>"""
-
-    except Exception as ex:
-        ic(ex)
-
-        # Rollback in case of database error
-        if "db" in locals():
-            db.rollback()
-
-        # Handle custom exceptions
-        if isinstance(ex, x.CustomException):
-            return f"""<template mix-target="#toast">{ex.message}</template>""", ex.code
-
-        # Handle database errors
-        if isinstance(ex, x.mysql.connector.Error):
-            return "<template>Database error</template>", 500        
-
-        # Handle unexpected errors
-        return "<template>System under maintenance</template>", 500  
-
-    finally:
-        # Close database resources
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
-
-############# IS THIS THE ONE EXCEPT BLAH BLAH WE SHOULD USE MAYBE ? ^^^^^
 
 
 ##############################
