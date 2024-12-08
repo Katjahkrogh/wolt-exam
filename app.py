@@ -595,8 +595,7 @@ def view_order():
     session.modified = True
     
     return render_template(
-        "view_order.html", 
-        success_message="Your order has been placed. Confirmation email sent.",
+        "view_order.html",
         total_value=last_order.get('total_value', 0),
         cart_items=last_order.get('cart_items', [])
     )
@@ -1032,13 +1031,38 @@ def checkout_cart():
     user_email = session.get("user").get("user_email")
 
     subject = f"Order Confirmation - Total: DKK {total_value:.2f}"
-    body = "<h2>Your Order Details:</h2>"
-    body += "<table border='1'><tr><th>Item</th><th>Quantity</th><th>Price</th></tr>"
+    body = """
+            <h2>Your Order Details:</h2>
+            <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Item</th>
+                        <th style="text-align: center; padding: 8px; border-bottom: 2px solid #ddd;">Quantity</th>
+                        <th style="text-align: right; padding: 8px; border-bottom: 2px solid #ddd;">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
     
     for item in cart:
-        body += f"<tr><td>{item['item_title']}</td><td>{item['quantity']}</td><td>DKK {item['total_item_price']:.2f}</td></tr>"
-    
-    body += f"<tr><td colspan='2'>Total</td><td>DKK {total_value:.2f}</td></tr></table>"
+        body += f"""
+        <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">{item['item_title']}</td>
+            <td style="text-align: center; padding: 8px; border-bottom: 1px solid #ddd;">{item['quantity']}</td>
+            <td style="text-align: right; padding: 8px; border-bottom: 1px solid #ddd;">DKK {item['total_item_price']:.2f}</td>
+        </tr>
+    """
+
+    body += f"""
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" style="text-align: right; padding: 8px; font-weight: bold; border-top: 2px solid #ddd;">Total:</td>
+                <td style="text-align: right; padding: 8px; font-weight: bold; border-top: 2px solid #ddd;">DKK {total_value:.2f}</td>
+            </tr>
+        </tfoot>
+    </table>
+    """
     
     # Send the email
     x.send_email(user_email, subject, body)

@@ -1,31 +1,45 @@
 {% include "_top_logged.html" %}
 
 <main class="mx-8" xl="mx-16">
-
-    <h1>Thank you for your order</h1>
-
-    {% if success_message %}
-        <p>{{ success_message }}</p>
-    {% endif %}
-
-    <h2>Order Summary</h2>
-    <p>Total Amount: DKK {{ total_value }}</p>
-
-    
-    <table>
-        <tr>
-            <th>Item</th>
-            <th>Quantity</th>
-            <th>Price</th>
-        </tr>
-        {% for item in cart_items %}
-            <tr>
-                <td>{{ item.item_title }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>DKK {{ item.total_item_price }}</td>
-            </tr>
-        {% endfor %}
-    </table>
+    <section class="pa-10 rounded-md shadow-sm ts-500 d-flex flex-col gap-6" md="max-w-200 ma-auto" xl="max-w-150">
+    <div class="d-flex flex-col j-content-center a-items-center">
+        <img src="{{ url_for('static', filename='img/order-confirm.svg') }}" alt="" class="w-30">
+        <h1 class="mb-0 mt-4" >Order placed</h1>
+        <p>Your food is on its way!</p>
+    </div>
+    <div>
+        <h2>Order Summary</h2>
+        <div class="py-4">
+            {% for item in cart_items %}
+                <div id="cartItem" class="d-flex flex-row j-content-between a-items-center mb-5">
+                            <div class="d-flex gap-4 j-content-start a-items-start">
+                                <img src="{{ url_for('static', filename='dishes/' + item.item_image) }}" alt="{{ item.item_title }}" class="h-12 w-22 obj-f-cover rounded-sm">
+                                <div class="d-flex flex-col j-content-center">
+                                    <h3 class="ma-0">{{item.item_title}}</h3>
+                                    <p class="text-c-primary ma-0">DKK {{item.total_item_price}}</p>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-4 a-items-center">
+                                {% if item.quantity > 1 %}
+                                    <p id="quantity" class="text-100 text-w-semibold mt-3" lg="text-120">x {{item.quantity}}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+            {% endfor %}
+        </div>
+        <div class="d-flex flex-row j-content-between a-items-center border-t-2 border-c-grey3 border-s-dashed pt-4">
+            <div class="d-flex flex-row a-items-center j-content-center gap-4"> 
+                <img src="{{ url_for('static', filename='img/scooter.svg') }}" alt="" class="w-6">
+                <p class="mb-0 text-110">Delivering to:</p>
+            </div>
+            <p class="ma-0 pt-4 text-80 text-110">{{ session['user']['user_address'] }}</p>            
+        </div>
+        <div class="d-flex flex-row j-content-between a-items-center pt-2">
+            <h3> Total Amount: </h3>
+            <h3> DKK {{ total_value }} </h3>
+        </div>
+    </div>
+    </section>
 
 </main>
 
