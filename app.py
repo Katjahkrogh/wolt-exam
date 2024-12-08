@@ -64,8 +64,6 @@ def view_index():
 def view_signup():  
     ic(session)
     if session.get("user"):
-        if len(session.get("user").get("roles")) > 1:
-            return redirect(url_for("view_choose_role")) 
         if "admin" in session.get("user").get("roles"):
             return redirect(url_for("view_admin"))
         if "customer" in session.get("user").get("roles"):
@@ -81,8 +79,6 @@ def view_signup():
 def view_signup_partner():  
     ic(session)
     if session.get("user"):
-        if len(session.get("user").get("roles")) > 1:
-            return redirect(url_for("view_choose_role")) 
         if "admin" in session.get("user").get("roles"):
             return redirect(url_for("view_admin"))
         if "customer" in session.get("user").get("roles"):
@@ -98,8 +94,6 @@ def view_signup_partner():
 def view_signup_restaurant():  
     ic(session)
     if session.get("user"):
-        if len(session.get("user").get("roles")) > 1:
-            return redirect(url_for("view_choose_role")) 
         if "admin" in session.get("user").get("roles"):
             return redirect(url_for("view_admin"))
         if "customer" in session.get("user").get("roles"):
@@ -114,9 +108,7 @@ def view_signup_restaurant():
 @x.no_cache
 def view_login():  
     ic(session)
-    if session.get("user"):
-        if len(session.get("user").get("roles")) > 1:
-            return redirect(url_for("view_choose_role")) 
+    if session.get("user"): 
         if "admin" in session.get("user").get("roles"):
             return redirect(url_for("view_admin"))
         if "customer" in session.get("user").get("roles"):
@@ -342,8 +334,6 @@ def view_partner():
     if not session.get("user", ""): 
         return redirect(url_for("view_login"))
     user = session.get("user")
-    if len(user.get("roles", "")) > 1:
-        return redirect(url_for("view_choose_role"))
     active_tab = request.args.get('tab', 'profile') 
     return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="partner")
 
@@ -519,18 +509,6 @@ def view_admin():
             cursor.close()
         if "db" in locals():
             db.close()
-
-
-##############################
-@app.get("/choose-role")
-@x.no_cache
-def view_choose_role():
-    if not session.get("user", ""): 
-        return redirect(url_for("view_login"))
-    if not len(session.get("user").get("roles")) >= 2:
-        return redirect(url_for("view_login"))
-    user = session.get("user")
-    return render_template("view_choose_role.html", user=user, title="Choose role")
 
 ##############################
 @app.get("/search-results")
@@ -729,7 +707,8 @@ def login():
                 ON user_pk = user_role_user_fk 
                 JOIN roles
                 ON role_pk = user_role_role_fk
-                WHERE LOWER(user_email) = %s """
+                WHERE LOWER(user_email) = %s
+                """
         cursor.execute(q, (user_email,))
         rows = cursor.fetchall()
 
@@ -773,11 +752,8 @@ def login():
         session["user"] = user
         
         # Redirect based on roles
-        if len(roles) == 1:
-            return f"""<template mix-redirect="/{roles[0]}"></template>"""
-        return f"""<template mix-redirect="/choose-role"></template>"""
+        return f"""<template mix-redirect="/{roles[0]}"></template>""" 
     
-
     except Exception as ex:
         ic(ex)
         if "db" in locals(): db.rollback()
