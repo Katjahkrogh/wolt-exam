@@ -768,6 +768,7 @@ def login():
         if "db" in locals(): db.close()
 
 
+
 ##############################
 @app.post("/logout")
 def logout():
@@ -892,9 +893,6 @@ def send_search_text():
     try:
         text = x.validate_search_text()
 
-        if text == "":
-            toast = render_template("___toast", message="Missing search text")
-            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>"""
         return f"""<template mix-redirect="/search-results?search={text}"></template>"""
     
     except Exception as ex:
@@ -916,6 +914,8 @@ def add_to_cart():
     try:
         # Parse the incoming JSON data
         data = request.get_json()
+
+        ic(data)
         
         if not data or "item_pk" not in data:
             return jsonify({"error": "Invalid data. Must include item_pk."}), 400

@@ -136,8 +136,18 @@ SEARCH_TEXT_MAX = 50
 SEARCH_TEXT_REGEX = f"^.{{{SEARCH_TEXT_MIN},{SEARCH_TEXT_MAX}}}$"
 def validate_search_text():
     error = f"Search text must be between {SEARCH_TEXT_MIN} and {SEARCH_TEXT_MAX} characters."
-    search_text = request.form.get("search", "").strip()  
-    if not re.match(SEARCH_TEXT_REGEX, search_text): raise_custom_exception(error, 400)
+    empty_error = "Missing search text"
+
+    search_text = request.form.get("search", "").strip()
+
+    # Check if the search field is empty
+    if not search_text:
+        raise_custom_exception(empty_error, 400)
+
+    # Validate the length and pattern of the search text
+    if not re.match(SEARCH_TEXT_REGEX, search_text):
+        raise_custom_exception(error, 400)
+
     return search_text
 
 ##############################
