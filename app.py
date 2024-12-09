@@ -797,7 +797,7 @@ def reset_password():
 
         if not user:
             toast = render_template("___toast.html", message="User not found with this email")
-            return f"""<template mix-target="#toast">{toast}</template>"""
+            return f"""<template mix-target="#toast">{toast}</template>""", 400
 
         user_name = user["user_name"]
         password_reset_key = user["user_pk"] 
