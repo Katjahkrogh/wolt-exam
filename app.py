@@ -5,14 +5,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import x
 import uuid 
 import time
-import redis
 import os
 
 from icecream import ic
 ic.configureOutput(prefix=f'***** | ', includeContext=True)
 
 app = Flask(__name__)
-app.config['SESSION_TYPE'] = 'filesystem'  # or 'redis', etc.
+app.config['SESSION_TYPE'] = 'filesystem' 
 Session(app)
 
 
@@ -28,27 +27,6 @@ def ______GET______(): pass
 ##############################
 ##############################
 
-
-
-# ##############################
-# @app.get("/test-set-redis")
-# def view_test_set_redis():
-#     redis_host = "redis"
-#     redis_port = 6379
-#     redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)    
-#     redis_client.set("name", "Santiago", ex=10)
-#     # name = redis_client.get("name")
-#     return "name saved"
-
-
-# @app.get("/test-get-redis")
-# def view_test_get_redis():
-#     redis_host = "redis"
-#     redis_port = 6379
-#     redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)    
-#     name = redis_client.get("name")
-#     if not name: name = "no name"
-#     return name
 
 
 ##############################
@@ -117,333 +95,6 @@ def view_login():
             return redirect(url_for("view_partner"))         
     return render_template("view_login.html", x=x, title="Login", message=request.args.get("message", ""))
 
-
-##############################
-@app.get("/reset-password/<password_reset_key>")
-@x.no_cache
-def view_reset_password(password_reset_key):  
-    return render_template("view_reset_password.html", x=x, title="Login", password_reset_key=password_reset_key)
-
-
-##############################
-@app.get("/customer")
-@x.no_cache
-def view_customer():
-    try:
-        if not session.get("user", ""): 
-            return redirect(url_for("view_login"))
-
-        db, cursor = x.db()
-        q = """
-            SELECT 
-                users.user_pk,
-                users.user_name,
-                users.user_last_name,
-                users.user_address,
-                users.user_email,
-                users.user_avatar,
-                roles.role_name
-            FROM users
-            JOIN users_roles 
-            ON users.user_pk = users_roles.user_role_user_fk
-            JOIN roles 
-            ON users_roles.user_role_role_fk = roles.role_pk
-            WHERE roles.role_name = 'restaurant' AND users.user_blocked_at = 0 AND users.user_deleted_at = 0;
-        """
-        cursor.execute(q)
-        restaurants = cursor.fetchall()  # Fetch all restaurants
-
-        # Pass restaurant and active_tab to the template
-        active_tab = request.args.get('tab', 'restaurants')
-        return render_template("view_customer.html", restaurants=restaurants, active_tab=active_tab, title="Volt")
-
-    
-    except Exception as ex:
-        ic(ex)
-        # Rollback the database if it exists
-        if "db" in locals(): 
-            db.rollback()
-
-        # Return an error message
-        return "<p>System under maintenance. Please try again later.</p>", 500
-
-    finally:
-        # Close database resources
-        if "cursor" in locals(): 
-            cursor.close()
-        if "db" in locals(): 
-            db.close()
-
-
-##############################
-@app.get("/api/restaurants")
-def get_restaurants():
-    try:
-        db, cursor = x.db()
-        # Get restaurant details
-        q = """
-            SELECT 
-                users.user_pk,
-                users.user_name,
-                users.user_address,
-                users.user_avatar
-            FROM users
-            JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
-            JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
-            WHERE roles.role_name = 'restaurant' AND users.user_blocked_at = 0 AND users.user_deleted_at = 0
-        """
-        cursor.execute(q)
-        restaurants = cursor.fetchall()
-
-        # Generate random lat/lng near Copenhagen
-        def random_coords():
-            latitude = random.uniform(55.65, 55.72) 
-            longitude = random.uniform(12.48, 12.58)  
-            return latitude, longitude
-
-        # Transform rows into JSON structure
-        result = []
-        for row in restaurants:
-            latitude, longitude = random_coords()
-            result.append({
-                "id": row["user_pk"],
-                "name": row["user_name"],
-                "address": row["user_address"],
-                "avatar_url": url_for('static', filename='dishes/' + row["user_avatar"]),
-                "latitude": latitude,
-                "longitude": longitude,
-                "url": url_for("view_restaurant_items", user_pk=row["user_pk"])
-            })
-
-        return {"restaurants": result}, 200
-
-    except Exception as ex:
-        ic(ex)
-        if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): 
-            toast = render_template("___toast.html", message=ex.message)
-            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
-        if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return """<template mix-target="#toast" mix-bottom>System upgrading</template>""", 500        
-        return """<template mix-target="#toast" mix-bottom>System under maintenance</template>""", 500 
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-##############################
-
-@app.get("/restaurant/<user_pk>")
-@x.no_cache
-def view_restaurant_items(user_pk):
-    try:
-        if not session.get("user", ""): 
-            return redirect(url_for("view_login"))
-
-        user_pk = x.validate_uuid4(user_pk)
-
-        db, cursor = x.db()
-
-        # Fetch the restaurant's information
-        q = """
-            SELECT 
-                users.user_pk,
-                users.user_name,
-                users.user_last_name,
-                users.user_address,
-                users.user_email,
-                users.user_avatar,
-                roles.role_name
-            FROM users
-            JOIN users_roles 
-            ON users.user_pk = users_roles.user_role_user_fk
-            JOIN roles 
-            ON users_roles.user_role_role_fk = roles.role_pk
-            WHERE users.user_pk = %s AND roles.role_name = 'restaurant'
-        """
-        cursor.execute(q, (user_pk,))
-        restaurant = cursor.fetchone()
-
-        if not restaurant:
-            return "<p>Restaurant not found.</p>", 404
-
-        # Fetch the items for this restaurant
-        q = """
-            SELECT 
-                item_pk,
-                item_title,
-                item_price,
-                item_image
-            FROM items
-            WHERE item_user_fk = %s AND item_deleted_at = 0 AND item_blocked_at = 0
-        """
-        cursor.execute(q, (user_pk,))
-        items = cursor.fetchall()
-
-        # Get the referrer URL for the back btn otherwise stay on page if it cant get the url
-        referrer_url = request.referrer if request.referrer else url_for('view_restaurant_items', user_pk=user_pk)
-
-        # Render the template with the restaurant and its items
-        return render_template("view_restaurant_items.html", user_pk=user_pk, restaurant=restaurant, items=items, referrer_url=referrer_url)
-
-    except Exception as ex:
-        ic(ex)
-        # Rollback if needed
-        if "db" in locals(): 
-            db.rollback()
-        return "<p>System under maintenance. Please try again later.</p>", 500
-
-    finally:
-        if "cursor" in locals(): 
-            cursor.close()
-        if "db" in locals(): 
-            db.close()
-
-##############################
-@app.get("/profile")
-@x.no_cache
-def view_profile():
-    try:
-        if not session.get("user", ""): 
-            return redirect(url_for("view_login"))
-        user = session.get("user")
-        db, cursor = x.db()
-        cursor.execute("SELECT * FROM users WHERE user_pk = %s", (user['user_pk'],))
-        user = cursor.fetchone()
-
-        active_tab = request.args.get('tab', 'profile')
-        return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="Profile")
-    except Exception as ex:
-        ic(ex)
-        if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): 
-            toast = render_template("___toast.html", message=ex.message)
-            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
-        if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>System upgrating</template>", 500        
-        return "<template>System under maintenance</template>", 500  
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-##############################
-@app.get("/partner")
-@x.no_cache
-def view_partner():
-    if not session.get("user", ""): 
-        return redirect(url_for("view_login"))
-    user = session.get("user")
-    active_tab = request.args.get('tab', 'profile') 
-    return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="partner")
-
-##############################
-@app.get("/restaurant")
-@x.no_cache
-def view_restaurant():
-    try:
-        user = session.get("user")
-        if not user:
-            return redirect(url_for("view_login"))
-        
-        user_pk = user.get("user_pk")
-
-        db, cursor = x.db()
-
-        # Get users
-        q = """ SELECT 
-                users.user_pk,
-                users.user_name,
-                users.user_last_name,
-                users.user_address,
-                users.user_email,
-                users.user_blocked_at,
-                roles.role_name
-                FROM users
-                JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
-                JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
-                WHERE users.user_pk = %s AND users.user_blocked_at = 0 AND users.user_deleted_at = 0
-            """
-        cursor.execute(q, (user_pk,))
-        users = cursor.fetchall()
-
-        # Get items
-        q = """
-        SELECT 
-            items.item_pk,
-            items.item_title,
-            items.item_price,
-            items.item_image,
-            items.item_blocked_at,
-            users.user_name
-        FROM items
-        JOIN users ON items.item_user_fk = users.user_pk
-        WHERE items.item_user_fk = %s AND items.item_blocked_at = 0 AND items.item_deleted_at = 0
-        ORDER BY items.item_title ASC
-        """
-        cursor.execute(q, (user_pk,))
-        items = cursor.fetchall()
-
-        # Determine the active tab
-        active_tab = request.args.get('tab', 'your_restaurant')
-
-        # Render the template
-        return render_template("view_restaurant.html", active_tab=active_tab, x=x, user=users, items=items, message=request.args.get("message", ""), title="Restaurant")
-
-    except Exception as ex:
-        ic(ex)
-        # Rollback if needed
-        if "db" in locals():
-            db.rollback()
-        return "<p>System under maintenance. Please try again later.</p>", 500
-
-    finally:
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
-
-
-##############################
-@app.get("/items/<item_pk>")
-@x.no_cache
-def view_edit_items(item_pk):
-    try:
-        db, cursor = x.db()
-
-        item_pk = x.validate_uuid4(item_pk)
-
-        # Fetch the item info
-        q = """
-            SELECT 
-                item_title, 
-                item_price, 
-                item_image
-            FROM items
-            WHERE item_pk = %s
-        """
-        cursor.execute(q, (item_pk,))
-        item = cursor.fetchone()
-
-        if not item:
-            return "<h2>Item not found</h2>", 404
-
-        return render_template(
-            "view_edit_items.html", item=item, item_pk=item_pk, x=x )
-    
-    except Exception as ex:
-        ic(ex)
-        if "db" in locals(): db.rollback()
-        if isinstance(ex, x.CustomException): 
-            toast = render_template("___toast.html", message=ex.message)
-            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
-        if isinstance(ex, x.mysql.connector.Error):
-            ic(ex)
-            return "<template>System upgrating</template>", 500        
-        return "<template>System under maintenance</template>", 500  
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
 
 
 ##############################
@@ -521,10 +172,298 @@ def view_admin():
         if "db" in locals():
             db.close()
 
+
+##############################
+@app.get("/customer")
+@x.no_cache
+def view_customer():
+    try:
+        user = session.get("user")
+        if not user: 
+            return redirect(url_for("view_login"))
+
+        if "customer" not in user.get("roles", []):
+            return redirect(url_for("view_login"))
+
+        db, cursor = x.db()
+        q = """
+            SELECT 
+                users.user_pk,
+                users.user_name,
+                users.user_last_name,
+                users.user_address,
+                users.user_email,
+                users.user_avatar,
+                roles.role_name
+            FROM users
+            JOIN users_roles 
+            ON users.user_pk = users_roles.user_role_user_fk
+            JOIN roles 
+            ON users_roles.user_role_role_fk = roles.role_pk
+            WHERE roles.role_name = 'restaurant' AND users.user_blocked_at = 0 AND users.user_deleted_at = 0;
+        """
+        cursor.execute(q)
+        restaurants = cursor.fetchall()  # Fetch all restaurants
+
+        # Pass restaurant and active_tab to the template
+        active_tab = request.args.get('tab', 'restaurants')
+        return render_template("view_customer.html", restaurants=restaurants, active_tab=active_tab, title="Volt")
+
+    
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+
+##############################
+@app.get("/partner")
+@x.no_cache
+def view_partner():
+    user = session.get("user")
+    if not user: 
+        return redirect(url_for("view_login"))
+
+    if "partner" not in user.get("roles", []):
+        return redirect(url_for("view_login"))
+        
+    
+    active_tab = request.args.get('tab', 'profile') 
+    return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="partner")
+
+##############################
+@app.get("/restaurant")
+@x.no_cache
+def view_restaurant():
+    try:
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))
+
+        if "restaurant" not in user.get("roles", []):
+            return redirect(url_for("view_login"))
+        
+        user_pk = user.get("user_pk")
+
+        db, cursor = x.db()
+
+        # Get users
+        q = """ SELECT 
+                users.user_pk,
+                users.user_name,
+                users.user_last_name,
+                users.user_address,
+                users.user_email,
+                users.user_blocked_at,
+                roles.role_name
+                FROM users
+                JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+                JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+                WHERE users.user_pk = %s AND users.user_blocked_at = 0 AND users.user_deleted_at = 0
+            """
+        cursor.execute(q, (user_pk,))
+        users = cursor.fetchall()
+
+        # Get items
+        q = """
+        SELECT 
+            items.item_pk,
+            items.item_title,
+            items.item_price,
+            items.item_image,
+            items.item_blocked_at,
+            users.user_name
+        FROM items
+        JOIN users ON items.item_user_fk = users.user_pk
+        WHERE items.item_user_fk = %s AND items.item_blocked_at = 0 AND items.item_deleted_at = 0
+        ORDER BY items.item_title ASC
+        """
+        cursor.execute(q, (user_pk,))
+        items = cursor.fetchall()
+
+        # Determine the active tab
+        active_tab = request.args.get('tab', 'your_restaurant')
+
+        # Render the template
+        return render_template("view_restaurant.html", active_tab=active_tab, x=x, user=users, items=items, message=request.args.get("message", ""), title="Restaurant")
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+##############################
+@app.get("/items/<item_pk>")
+@x.no_cache
+def view_edit_items(item_pk):
+    try:
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))
+
+        if "restaurant" not in user.get("roles", []):
+            return redirect(url_for("view_login"))
+        
+        db, cursor = x.db()
+
+        item_pk = x.validate_uuid4(item_pk)
+
+        # Fetch the item info
+        q = """
+            SELECT 
+                item_title, 
+                item_price, 
+                item_image
+            FROM items
+            WHERE item_pk = %s
+        """
+        cursor.execute(q, (item_pk,))
+        item = cursor.fetchone()
+
+        if not item:
+            return "<h2>Item not found</h2>", 404
+
+        return render_template(
+            "view_edit_items.html", item=item, item_pk=item_pk, x=x )
+    
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+##############################
+@app.get("/profile")
+@x.no_cache
+def view_profile():
+    try:
+        if not session.get("user", ""): 
+            return redirect(url_for("view_login"))
+        
+        user = session.get("user")
+        db, cursor = x.db()
+        cursor.execute("SELECT * FROM users WHERE user_pk = %s", (user['user_pk'],))
+        user = cursor.fetchone()
+
+        active_tab = request.args.get('tab', 'profile')
+        return render_template("view_profile.html", user=user, x=x, active_tab=active_tab, title="Profile")
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return "<template>System upgrating</template>", 500        
+        return "<template>System under maintenance</template>", 500  
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+
+##############################
+@app.get("/api/restaurants")
+def get_restaurants():
+    try:
+        user = session.get("user")
+        if not user: 
+            return redirect(url_for("view_login"))
+        
+        db, cursor = x.db()
+        # Get restaurant details
+        q = """
+            SELECT 
+                users.user_pk,
+                users.user_name,
+                users.user_address,
+                users.user_avatar
+            FROM users
+            JOIN users_roles ON users.user_pk = users_roles.user_role_user_fk
+            JOIN roles ON users_roles.user_role_role_fk = roles.role_pk
+            WHERE roles.role_name = 'restaurant' AND users.user_blocked_at = 0 AND users.user_deleted_at = 0
+        """
+        cursor.execute(q)
+        restaurants = cursor.fetchall()
+
+        # Generate random lat/lng near Copenhagen
+        def random_coords():
+            latitude = random.uniform(55.65, 55.72) 
+            longitude = random.uniform(12.48, 12.58)  
+            return latitude, longitude
+
+        # Transform rows into JSON structure
+        result = []
+        for row in restaurants:
+            latitude, longitude = random_coords()
+            result.append({
+                "id": row["user_pk"],
+                "name": row["user_name"],
+                "address": row["user_address"],
+                "avatar_url": url_for('static', filename='dishes/' + row["user_avatar"]),
+                "latitude": latitude,
+                "longitude": longitude,
+                "url": url_for("view_restaurant_items", user_pk=row["user_pk"])
+            })
+
+        return {"restaurants": result}, 200
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        if isinstance(ex, x.CustomException): 
+            toast = render_template("___toast.html", message=ex.message)
+            return f"""<template mix-target="#toast" mix-bottom>{toast}</template>""", ex.code    
+        if isinstance(ex, x.mysql.connector.Error):
+            ic(ex)
+            return """<template mix-target="#toast" mix-bottom>System upgrading</template>""", 500        
+        return """<template mix-target="#toast" mix-bottom>System under maintenance</template>""", 500 
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+
+
+
 ##############################
 @app.get("/search-results")
 def view_search_results():
     try:
+        user = session.get("user")
+        if not user: 
+            return redirect(url_for("view_login"))
+        
         search_text = request.args.get("search", "").replace("-", " ")
 
         db, cursor = x.db()
@@ -562,6 +501,12 @@ def view_search_results():
         if "db" in locals(): db.close()
 
 
+##############################
+@app.get("/reset-password/<password_reset_key>")
+@x.no_cache
+def view_reset_password(password_reset_key):  
+    return render_template("view_reset_password.html", x=x, title="reset password", password_reset_key=password_reset_key)
+
 
 ##############################
 @app.get("/cart-total")
@@ -569,6 +514,7 @@ def get_cart_total():
     cart = session.get("cart", [])
     total_items = sum(item["quantity"] for item in cart)
     return jsonify({"total_items": total_items})
+
 
 ##############################
 @app.get("/order")
@@ -581,7 +527,7 @@ def view_order():
     session.modified = True
     
     return render_template(
-        "view_order.html",
+        "view_order.html", title="Your order",
         total_value=last_order.get('total_value', 0),
         cart_items=last_order.get('cart_items', [])
     )
@@ -912,7 +858,7 @@ def send_search_text():
 @app.post("/add-to-cart")
 def add_to_cart():
     try:
-        # Parse the incoming JSON data
+        # Parse the incoming JSON data to objects
         data = request.get_json()
 
         ic(data)
@@ -922,7 +868,6 @@ def add_to_cart():
 
         item_pk = data["item_pk"]
 
-        # Fetch item details from the database
         db, cursor = x.db()
         q = """
             SELECT 
@@ -936,7 +881,7 @@ def add_to_cart():
         if not item:
             return jsonify({"error": "Item not found."}), 404
 
-        # Extract details from the database query
+        # get details from the db q
         item_title = item["item_title"]
         item_price = float(item["item_price"])
         item_image = item["item_image"]
@@ -966,7 +911,7 @@ def add_to_cart():
         session["cart"] = cart
         session.modified = True
 
-        # Redirect to the restaurant page after adding item to cart
+        # Return cart as json 
         return jsonify({"cart": cart, "message": f"{item_title} added to cart."}), 200
     
     except Exception as ex:
@@ -1004,10 +949,7 @@ def remove_from_cart(item_pk):
             session["cart"] = cart  
             session.modified = True
 
-            return jsonify({
-                "success": True,
-                "cart": cart
-            })
+            return jsonify({ "success": True, "cart": cart })
 
         return jsonify({"error": "Item not found in cart"}), 404
     
@@ -1028,6 +970,10 @@ def remove_from_cart(item_pk):
 @app.post("/checkout")    
 def checkout_cart():
     try:
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))
+        
         cart = session.get('cart', [])
         
         if not cart:
@@ -1098,6 +1044,8 @@ def checkout_cart():
     finally:
             pass    
 
+
+
 ##############################
 ##############################
 ##############################
@@ -1108,12 +1056,13 @@ def ______PUT_______(): pass
 ##############################
 ##############################
 
+
+
 @app.put("/users/<user_pk>")
 def user_update(user_pk):
     try:
         user = session.get("user")
         if not user:
-            x.raise_custom_exception("please login", 401)
             return redirect(url_for("view_login"))
 
         user_pk = x.validate_uuid4(user_pk)
@@ -1242,6 +1191,10 @@ def update_item(item_pk):
 @x.no_cache
 def update_password(password_reset_key):
     try:
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))
+        
         password_reset_key = x.validate_uuid4(password_reset_key)
         user_updated_at = int(time.time())
 
@@ -1289,7 +1242,6 @@ def update_password(password_reset_key):
 @app.put("/users/delete/<user_pk>")
 def user_soft_delete(user_pk):
     try:
-        # Check if the user is logged in
         user_session = session.get("user", None)
         if not user_session:
             return redirect(url_for("view_login"))
@@ -1363,13 +1315,13 @@ def user_soft_delete(user_pk):
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
 
+
 ##############################
 @app.put("/items/delete/<item_pk>")
 def item_soft_delete(item_pk):
     try:
-        # Check if the user is logged in
-        user_session = session.get("user", None)
-        if not user_session:
+        user = session.get("user", None)
+        if not user:
             return redirect(url_for("view_login"))
         
         # Validate UUID
@@ -1405,8 +1357,13 @@ def item_soft_delete(item_pk):
 ##############################
 @app.put("/users/block/<user_pk>")
 def block_user(user_pk):
-    try:        
-        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
+    try: 
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))  
+        
+        if not "admin" in session.get("user").get("roles"):
+            return redirect(url_for("view_login"))
     
         user_pk = x.validate_uuid4(user_pk)
         user_blocked_at = int(time.time())
@@ -1471,7 +1428,12 @@ def block_user(user_pk):
 @app.put("/users/unblock/<user_pk>")
 def unblock_user(user_pk):
     try:
-        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
+        user_session = session.get("user")
+        if not user_session:
+            return redirect(url_for("view_login"))  
+        
+        if not "admin" in session.get("user").get("roles"):
+            return redirect(url_for("view_login"))
 
         user_pk = x.validate_uuid4(user_pk)
         user_updated_at = int(time.time())
@@ -1540,7 +1502,12 @@ def unblock_user(user_pk):
 @app.put("/items/block/<item_pk>")
 def block_item(item_pk):
     try:        
-        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))  
+        
+        if not "admin" in session.get("user").get("roles"):
+            return redirect(url_for("view_login"))
     
         item_pk = x.validate_uuid4(item_pk)
         item_blocked_at = int(time.time())
@@ -1616,7 +1583,12 @@ def block_item(item_pk):
 @app.put("/items/unblock/<item_pk>")
 def unblock_item(item_pk):
     try:
-        if not "admin" in session.get("user").get("roles"): return redirect(url_for("view_login"))
+        user = session.get("user")
+        if not user:
+            return redirect(url_for("view_login"))  
+        
+        if not "admin" in session.get("user").get("roles"):
+            return redirect(url_for("view_login"))
 
         item_pk = x.validate_uuid4(item_pk)
         item_updated_at = int(time.time())
@@ -1694,23 +1666,13 @@ def unblock_item(item_pk):
 ##############################
 ##############################
 
-# def ______DELETE______(): pass
-
-##############################
-##############################
-##############################
-
-
-
-##############################
-##############################
-##############################
-
 def ______BRIDGE____(): pass
 
 ##############################
 ##############################
 ##############################
+
+
 
 
 ##############################
