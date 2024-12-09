@@ -172,17 +172,22 @@ def validate_item_price():
 UPLOAD_ITEM_FOLDER = './static/dishes' #saves img in static/dishes folder
 ALLOWED_ITEM_FILE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 def validate_item_image():
-    if 'item_image' not in request.files: raise_custom_exception("Image file missing", 400)
+    # Check if 'item_image' is in the request and is not empty
+    if 'item_image' not in request.files or not request.files['item_image']:
+        raise_custom_exception("Image file missing", 400)
 
-    file = request.files.get("item_image", "")
-    if file.filename == "": raise_custom_exception("File name invalid", 400)
+    file = request.files.get("item_image")
+    # Check if the filename is valid
+    if not file or file.filename.strip() == "":
+        raise_custom_exception("File name invalid", 400)
 
-    #check for filetype
+    # Extract the file extension and validate it
     file_extension = os.path.splitext(file.filename)[1][1:].lower()
     if file_extension not in ALLOWED_ITEM_FILE_EXTENSIONS:
         raise_custom_exception(f"Invalid file type. Allowed types: {', '.join(ALLOWED_ITEM_FILE_EXTENSIONS)}", 400)
 
-    filename = f"{uuid.uuid4()}.{file_extension}" #make unique filename with UUID
+    # Generate a unique filename
+    filename = f"{uuid.uuid4()}.{file_extension}"
     return file, filename
 
 
