@@ -393,6 +393,76 @@ def view_profile():
 
 
 ##############################
+@app.get("/restaurant/<user_pk>")
+@x.no_cache
+def view_restaurant_items(user_pk):
+    try:
+        if not session.get("user", ""): 
+            return redirect(url_for("view_login"))
+
+        user_pk = x.validate_uuid4(user_pk)
+
+        db, cursor = x.db()
+
+        # Fetch the restaurant's information
+        q = """
+            SELECT 
+                users.user_pk,
+                users.user_name,
+                users.user_last_name,
+                users.user_address,
+                users.user_email,
+                users.user_avatar,
+                roles.role_name
+            FROM users
+            JOIN users_roles 
+            ON users.user_pk = users_roles.user_role_user_fk
+            JOIN roles 
+            ON users_roles.user_role_role_fk = roles.role_pk
+            WHERE users.user_pk = %s AND roles.role_name = 'restaurant'
+        """
+        cursor.execute(q, (user_pk,))
+        restaurant = cursor.fetchone()
+
+        if not restaurant:
+            return "<p>Restaurant not found.</p>", 404
+
+        # Fetch the items for this restaurant
+        q = """
+            SELECT 
+                item_pk,
+                item_title,
+                item_price,
+                item_image
+            FROM items
+            WHERE item_user_fk = %s AND item_deleted_at = 0 AND item_blocked_at = 0
+        """
+        cursor.execute(q, (user_pk,))
+        items = cursor.fetchall()
+
+        # Get the referrer URL for the back btn otherwise stay on page if it cant get the url
+        referrer_url = request.referrer if request.referrer else url_for('view_restaurant_items', user_pk=user_pk)
+
+        # Render the template with the restaurant and its items
+        return render_template("view_restaurant_items.html", user_pk=user_pk, restaurant=restaurant, items=items, referrer_url=referrer_url)
+
+    except Exception as ex:
+        ic(ex)
+        # Rollback if needed
+        if "db" in locals(): 
+            db.rollback()
+        return "<p>System under maintenance. Please try again later.</p>", 500
+
+    finally:
+        if "cursor" in locals(): 
+            cursor.close()
+        if "db" in locals(): 
+            db.close()
+
+
+
+
+##############################
 @app.get("/api/restaurants")
 def get_restaurants():
     try:
@@ -521,10 +591,9 @@ def get_cart_total():
 def view_order():
 # Retrieve the last order from the session
     last_order = session.get('last_order', {})
-    
-    # Clear the last order from the session after retrieving
-    session.pop('last_order', None)
-    session.modified = True
+
+    if not last_order: 
+        return redirect(url_for("view_customer"))
     
     return render_template(
         "view_order.html", title="Your order",
@@ -720,6 +789,7 @@ def login():
 def logout():
     session.pop("user", None)
     session.pop("cart", None)
+    session.pop("last_order", None)
     session.modified = True
     # session.clear()
     return redirect(url_for("view_login"))
@@ -1708,5 +1778,6 @@ def verify_user(verification_key):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
 
 
