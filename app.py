@@ -826,7 +826,7 @@ def reset_password():
             <body>
                 <p>Hi {user_name},</p>
                 <p>Click the link below to reset your password</p>
-                <a href="http://127.0.0.1/reset-password/{password_reset_key}">Reset password</a>
+                <a href="{x.BASE_URL}/reset-password/{password_reset_key}">Reset password</a>
             </body>
         </html>
         """
