@@ -47,7 +47,7 @@ services:
     volumes:
       - arangodb_data:/var/lib/arangodb3
     ports:
-      - 8529:8529
+      - 8531:8529
 
 
   redis:

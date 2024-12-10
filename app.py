@@ -679,7 +679,7 @@ def signup(role):
             <body>
                 <p>Hi {user_name},</p>
                 <p>Thank you for signing up! Please verify your account by clicking the link below:</p>
-                <p><a href="http://127.0.0.1/verify/{user_verification_key}">Verify My Account</a></p>
+                <p><a href="{x.BASE_URL}/verify/{user_verification_key}">Verify My Account</a></p>
             </body>
         </html>
         """

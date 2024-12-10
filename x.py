@@ -4,6 +4,7 @@ import mysql.connector
 import re
 import os
 import uuid
+import os
 
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -32,18 +33,25 @@ class CustomException(Exception):
 def raise_custom_exception(error, status_code):
     raise CustomException(error, status_code)
 
+##############################
+
+BASE_URL = "https://katjakrogh.pythonanywhere.com" if "PYTHONANYWHERE_DOMAIN" in os.environ else "http://127.0.0.1"
 
 ##############################
 def db():
+    host = "katjakrogh.mysql.pythonanywhere-services.com" if "PYTHONANYWHERE_DOMAIN" in os.environ else "mysql"
+    database = "katjakrogh$company" if "PYTHONANYWHERE_DOMAIN" in os.environ else "company"
+    user = "katjakrogh" if "PYTHONANYWHERE_DOMAIN" in os.environ else "root"
+    password = "mysqlpassword" if "PYTHONANYWHERE_DOMAIN" in os.environ else "password"
+
     db = mysql.connector.connect(
-        host="mysql",      # Replace with your MySQL server's address or docker service name "mysql"
-        user="root",  # Replace with your MySQL username
-        password="password",  # Replace with your MySQL password
-        database="company"   # Replace with your MySQL database name
+        host = host,
+        user = user,
+        password = password,
+        database = database
     )
     cursor = db.cursor(dictionary=True)
     return db, cursor
-
 
 ##############################
 def no_cache(view):
@@ -179,7 +187,7 @@ def validate_item_price():
         return item_price
 
 ##############################
-UPLOAD_ITEM_FOLDER = './static/dishes' #saves img in static/dishes folder
+UPLOAD_ITEM_FOLDER = "/home/katjakrogh/wolt-exam/static/dishes" if "PYTHONANYWHERE_DOMAIN" in os.environ else "./static/dishes" #saves img in static/dishes folder
 ALLOWED_ITEM_FILE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 def validate_item_image():
     # Check if 'item_image' is in the request and is not empty
