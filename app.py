@@ -1,5 +1,5 @@
 import random
-from flask import Flask, session, render_template, redirect, url_for, make_response, request, render_template_string, jsonify
+from flask import Flask, session, render_template, redirect, url_for, make_response, request, jsonify
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 import x
@@ -1261,10 +1261,6 @@ def update_item(item_pk):
 @x.no_cache
 def update_password(password_reset_key):
     try:
-        user = session.get("user")
-        if not user:
-            return redirect(url_for("view_login"))
-        
         password_reset_key = x.validate_uuid4(password_reset_key)
         user_updated_at = int(time.time())
 
@@ -1279,20 +1275,12 @@ def update_password(password_reset_key):
             """
         cursor.execute(q, (hashed_password, user_updated_at, password_reset_key))
 
-        if cursor.rowcount != 1: x.raise_custom_exception("cannot reset password", 400)
+        if cursor.rowcount != 1: 
+            x.raise_custom_exception("cannot reset password", 400)
 
         db.commit()
-        # render_template_string to render HTML instead of template file
-        return render_template_string("""
-                    <template mix-target="#resetPassword">
-                        <h2>New password saved</h2>
-                        <form method="GET" action="{{ url_for('view_login') }}">
-                            <button> 
-                                Go to login
-                            </button>
-                        </form>
-                    </template>
-                """)
+
+        return """<template mix-redirect="/login?message=New+password+saved,+please+login"></template>"""
 
     except Exception as ex:
         ic(ex)
