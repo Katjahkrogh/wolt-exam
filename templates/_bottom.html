@@ -15,7 +15,7 @@
     <script src="{{url_for('static', filename='js/map.js')}}"></script>
 {% endif %}
 
-{% if request.endpoint == 'view_restaurant_items' or 'view_restaurant' and active_tab == 'your_restaurant' %}
+{% if request.endpoint == 'view_restaurant_items' or 'view_restaurant' and active_tab == 'your_restaurant' or 'view_search_results' %}
     <script src="{{url_for('static', filename='js/item.js')}}"></script>
 {% endif %}
 

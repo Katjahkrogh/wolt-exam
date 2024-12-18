@@ -863,7 +863,7 @@ def create_item():
         # Validate inputs
         item_title = x.validate_item_title()
         item_price = x.validate_item_price()
-        file, item_image_name = x.validate_item_image()
+        validated_files = x.validate_item_image()
 
         item_pk = str(uuid.uuid4())
         item_user_fk = session.get("user").get("user_pk")
@@ -874,18 +874,39 @@ def create_item():
 
         # Save the image to the upload folder
         os.makedirs(x.UPLOAD_ITEM_FOLDER, exist_ok=True)
-        file.save(os.path.join(x.UPLOAD_ITEM_FOLDER, item_image_name))
 
-        # Insert item into the database
+        # Save all images and get the filenames
+        for index, (file, filename) in enumerate(validated_files):
+            file.save(os.path.join(x.UPLOAD_ITEM_FOLDER, filename))
+            
+            # If it's the first image (index 0), save it to items table
+            if index == 0:
+                main_image = filename
+
+        # Insert item into the database with the first image
         db, cursor = x.db()
-        q = """
-            INSERT INTO items (item_pk, item_user_fk, item_title, item_price, item_image, item_created_at, item_deleted_at, item_blocked_at, item_updated_at)
+        
+        # Insert into items table
+        q_item = """
+            INSERT INTO items (item_pk, item_user_fk, item_title, item_price, item_image, 
+                            item_created_at, item_deleted_at, item_blocked_at, item_updated_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(q, (item_pk, item_user_fk, item_title, item_price, item_image_name, item_created_at, item_deleted_at, item_blocked_at, item_updated_at))
+        cursor.execute(q_item, (item_pk, item_user_fk, item_title, item_price, main_image,
+                            item_created_at, item_deleted_at, item_blocked_at, item_updated_at))
+
+        # Insert all images into item_images table
+        q_images = """
+            INSERT INTO item_images (image_pk, item_fk, image_path, image_order)
+            VALUES (%s, %s, %s, %s)
+        """
+        for index, (_, filename) in enumerate(validated_files):
+            image_pk = str(uuid.uuid4())
+            cursor.execute(q_images, (image_pk, item_pk, filename, index))
+
         db.commit()
 
-        return f"""<template mix-redirect="/restaurant"></template>"""
+        return """<template mix-redirect="/restaurant"></template>"""
     
     except Exception as ex:
         ic(ex)
@@ -900,7 +921,6 @@ def create_item():
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
-
 
 
 ##############################
@@ -1254,6 +1274,9 @@ def update_item(item_pk):
     finally:
             if "cursor" in locals(): cursor.close()
             if "db" in locals(): db.close()
+
+
+
 
 
 ##############################

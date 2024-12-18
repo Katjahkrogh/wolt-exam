@@ -38,6 +38,7 @@ def insert_user_with_role(user, role_pk):
 try:
     ##############################
     # Drop tables if they exist
+    cursor.execute("DROP TABLE IF EXISTS item_images")
     cursor.execute("DROP TABLE IF EXISTS items")  # dependent table
     cursor.execute("DROP TABLE IF EXISTS users_roles")  # dependent table
     cursor.execute("DROP TABLE IF EXISTS users")
@@ -102,6 +103,16 @@ try:
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE item_images (
+            image_pk VARCHAR(36),
+            item_fk VARCHAR(36),
+            image_path VARCHAR(255) NOT NULL,
+            image_order TINYINT DEFAULT 0,
+            FOREIGN KEY (item_fk) REFERENCES items(item_pk) ON DELETE CASCADE
+        )
+    """)
+
     ##############################
     # Insert roles
     cursor.execute("""
@@ -132,6 +143,44 @@ try:
         "user_verification_key": str(uuid.uuid4())
     }
     insert_user_with_role(admin_user, x.ADMIN_ROLE_PK)
+
+    ##############################
+    # Insert restaurant user
+    restaurant_user = {
+        "user_pk": str(uuid.uuid4()),
+        "user_name": "Pizza place",
+        "user_last_name": "--",
+        "user_address": fake.street_address(),
+        "user_email": "restaurant@gmail.com",
+        "user_password": generate_password_hash("password"),
+        "user_avatar": "dish_" + str(random.randint(1, 100)) + ".jpg",
+        "user_created_at": int(time.time()),
+        "user_deleted_at": 0,
+        "user_blocked_at": 0,
+        "user_updated_at": 0,
+        "user_verified_at": int(time.time()),
+        "user_verification_key": str(uuid.uuid4())
+    }
+    insert_user_with_role(restaurant_user, x.RESTAURANT_ROLE_PK)
+
+    ##############################
+    # Insert partner user
+    partner_user = {
+        "user_pk": str(uuid.uuid4()),
+        "user_name": "Super",
+        "user_last_name": "Partner",
+        "user_address": fake.street_address(),
+        "user_email": "partner@gmail.com",
+        "user_password": generate_password_hash("password"),
+        "user_avatar": "profile_" + str(random.randint(1, 100)) + ".jpg",
+        "user_created_at": int(time.time()),
+        "user_deleted_at": 0,
+        "user_blocked_at": 0,
+        "user_updated_at": 0,
+        "user_verified_at": int(time.time()),
+        "user_verification_key": str(uuid.uuid4())
+    }
+    insert_user_with_role(partner_user, x.PARTNER_ROLE_PK)
 
     ##############################
     # Insert 50 customers

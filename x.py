@@ -187,26 +187,33 @@ def validate_item_price():
         return item_price
 
 ##############################
-UPLOAD_ITEM_FOLDER = "/home/katjakrogh/wolt-exam/static/dishes" if "PYTHONANYWHERE_DOMAIN" in os.environ else "./static/dishes" #saves img in static/dishes folder
+UPLOAD_ITEM_FOLDER = "/home/katjakrogh/wolt-exam/static/dishes" if "PYTHONANYWHERE_DOMAIN" in os.environ else "./static/dishes" 
 ALLOWED_ITEM_FILE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 def validate_item_image():
     # Check if 'item_image' is in the request and is not empty
-    if 'item_image' not in request.files or not request.files['item_image']:
-        raise_custom_exception("Image file missing", 400)
+    if 'item_image' not in request.files:
+        raise_custom_exception("Image files missing", 400)
+    
+    files = request.files.getlist('item_image')
+    if not files:
+        raise_custom_exception("No files selected", 400)
+    
+    if len(files) > 3:
+        raise_custom_exception("Maximum 3 files allowed", 400)
 
-    file = request.files.get("item_image")
-    # Check if the filename is valid
-    if not file or file.filename.strip() == "":
-        raise_custom_exception("File name invalid", 400)
-
-    # Extract the file extension and validate it
-    file_extension = os.path.splitext(file.filename)[1][1:].lower()
-    if file_extension not in ALLOWED_ITEM_FILE_EXTENSIONS:
-        raise_custom_exception(f"Invalid file type. Allowed types: {', '.join(ALLOWED_ITEM_FILE_EXTENSIONS)}", 400)
-
-    # Generate a unique filename
-    filename = f"{uuid.uuid4()}.{file_extension}"
-    return file, filename
+    validated_files = []
+    for file in files:
+        if not file or file.filename.strip() == "":
+            raise_custom_exception("File name invalid", 400)
+            
+        file_extension = os.path.splitext(file.filename)[1][1:].lower()
+        if file_extension not in ALLOWED_ITEM_FILE_EXTENSIONS:
+            raise_custom_exception(f"Invalid file type. Allowed types: {', '.join(ALLOWED_ITEM_FILE_EXTENSIONS)}", 400)
+            
+        filename = f"{uuid.uuid4()}.{file_extension}"
+        validated_files.append((file, filename))
+    
+    return validated_files
 
 
 
